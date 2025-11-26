@@ -8,57 +8,55 @@ import {
   SignUpButton,
   UserButton,
 } from "@clerk/nextjs";
+import { ShoppingCart, Coffee } from "lucide-react";
 
 export default function CartHeader() {
   return (
-    <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
-      <div className="container flex h-14 items-center justify-between relative">
-        <div className="flex items-center gap-8">
-          <Link href="/" className="flex items-center gap-3">
-            <div className="relative h-18 w-20 overflow-hidden">
-              <Image
-                src="/images/Logo/Coffeemium.png"
-                alt="Coffeemium"
-                fill
-                className="object-contain"
-              />
-            </div>
-            <span className="sr-only">Coffeemium home</span>
+    <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-lg">
+      <div className="mx-auto max-w-screen-xl flex items-center justify-between h-20 px-6">
+        {/* Left: Logo + Nav */}
+        <div className="flex items-center gap-10">
+          <Link href="/" className="flex items-center gap-2 group">
+            <Image
+              src="/images/Logo/Coffeemium.png"
+              alt="Coffeemium"
+              width={48}
+              height={48}
+              className="object-contain"
+            />
+            <Coffee className="w-6 h-6 text-[#6c47ff] hidden group-hover:block animate-pulse" />
           </Link>
 
-          <nav className="flex items-center space-x-4 lg:space-x-6">
-            <Link
-              href="/"
-              className="text-sm font-medium text-muted-foreground hover:text-primary"
-            >
+          <nav className="hidden md:flex items-center gap-8">
+            <Link className="nav-link" href="/">
               Home
             </Link>
-            <Link
-              href="/shop"
-              className="text-sm font-medium text-muted-foreground hover:text-primary"
-            >
+            <Link className="nav-link" href="/shop">
               Shop
             </Link>
-            <Link
-              href="/cart"
-              className="text-sm font-medium text-primary hover:text-primary"
-            >
+            <Link className="nav-link text-primary font-semibold" href="/cart">
               Cart
             </Link>
           </nav>
         </div>
 
+        {/* Right: Cart + User */}
         <div className="flex items-center gap-4">
+          <Link
+            href="/cart"
+            className="relative hover:opacity-70 transition group"
+          >
+            <ShoppingCart className="w-6 h-6 text-foreground hover-scale group-hover:text-[#6c47ff] transition-colors" />
+          </Link>
+
           <SignedIn>
-            <UserButton />
+            <UserButton afterSignOutUrl="/" />
           </SignedIn>
 
           <SignedOut>
             <SignInButton />
             <SignUpButton>
-              <button className="bg-[#6c47ff] text-white rounded-full font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 cursor-pointer">
-                Sign Up
-              </button>
+              <button className="btn-brand hidden sm:flex">Sign Up</button>
             </SignUpButton>
           </SignedOut>
         </div>

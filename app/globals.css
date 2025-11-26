@@ -1,7 +1,67 @@
+@import "https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&family=Inter:wght@400;500;600&display=swap";
 @import "tailwindcss";
 @import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
+
+.nav-link {
+  @apply text-sm font-medium text-muted-foreground hover:text-primary transition-colors;
+}
+
+.btn-primary {
+  @apply bg-primary text-white px-6 py-2 rounded-full font-medium hover:bg-primary/90 transition;
+}
+
+.btn-brand {
+  @apply bg-[#6c47ff] text-white px-6 py-2 rounded-full font-medium hover:bg-[#5835ff] transition shadow-md hover:shadow-lg;
+}
+
+/* UI/UX polish utilities */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes pulseScale {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+.hover-scale {
+  transition: transform 0.2s;
+}
+.hover-scale:hover {
+  transform: scale(1.02);
+}
+.toast {
+  position: fixed;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.btn-outline {
+  @apply border border-input px-5 py-2 rounded-full text-sm font-medium text-foreground hover:bg-accent transition;
+}
 
 @theme inline {
   --color-background: var(--background);
@@ -44,6 +104,12 @@
 }
 
 :root {
+  /* Brand palette */
+  --brand-primary: #6c47ff;
+  --brand-accent: #d4a373;
+  --font-heading: "Outfit", sans-serif;
+  --font-body: "Inter", sans-serif;
+
   --radius: 0.625rem;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);

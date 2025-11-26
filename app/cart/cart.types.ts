@@ -20,6 +20,8 @@ export interface LocalCartItem {
   image?: string | null;
   basePrice: number;
   quantity: number;
+  roastId?: string;
+  grindOptionId?: string;
 }
 
 export interface Roast {

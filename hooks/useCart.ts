@@ -24,6 +24,20 @@ import { dispatchCartUpdateEvent } from "@/lib/cartEvents";
  *   so multiple instances and tabs stay in sync.
  */
 
+// Helper function to match cart items by unique combination
+const matchesCartItem = (
+  item: any,
+  productId: string | number,
+  roastId?: string | null,
+  grindOptionId?: string | null
+) => {
+  return (
+    item.id === productId &&
+    (item.roastId ?? null) === (roastId ?? null) &&
+    (item.grindOptionId ?? null) === (grindOptionId ?? null)
+  );
+};
+
 export function useCart() {
   const { isLoaded, isSignedIn, user } = useUser();
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
@@ -73,6 +87,8 @@ export function useCart() {
           image: item.image,
           basePrice: item.basePrice,
           quantity: item.quantity,
+          roastId: item.roastId,
+          grindOptionId: item.grindOptionId,
         }))
       );
     } catch (err: any) {
@@ -104,13 +120,24 @@ export function useCart() {
         image?: string | null;
         basePrice: number;
       },
-      quantity = 1
-      // future: options like roastId/grindOptionId
+      quantity = 1,
+      options?: {
+        roastId?: string | null;
+        grindOptionId?: string | null;
+      }
     ): Promise<{ success: true } | { success: false; error: string }> => {
       try {
         // For stability, always operate on localStorage first
         const cart = getCartFromLocalStorage();
-        const index = cart.findIndex((i: any) => i.id === productToAdd.id);
+
+        // Match based on unique combination: productId + roastId + grindOptionId
+        // This mirrors the database @@unique constraint
+        const index = cart.findIndex(
+          (i: any) =>
+            i.id === productToAdd.id &&
+            (i.roastId ?? null) === (options?.roastId ?? null) &&
+            (i.grindOptionId ?? null) === (options?.grindOptionId ?? null)
+        );
 
         if (index > -1) {
           cart[index].quantity = (cart[index].quantity || 0) + quantity;
@@ -121,6 +148,8 @@ export function useCart() {
             image: productToAdd.image ?? null,
             basePrice: productToAdd.basePrice,
             quantity,
+            roastId: options?.roastId ?? null,
+            grindOptionId: options?.grindOptionId ?? null,
           });
         }
 
@@ -128,7 +157,12 @@ export function useCart() {
 
         // Update the hook state so consumers re-render
         setCartItems((prev) => {
-          const prevIndex = prev.findIndex((i) => i.id === productToAdd.id);
+          const prevIndex = prev.findIndex(
+            (i) =>
+              i.id === productToAdd.id &&
+              (i.roastId ?? null) === (options?.roastId ?? null) &&
+              (i.grindOptionId ?? null) === (options?.grindOptionId ?? null)
+          );
           if (prevIndex > -1) {
             const copy = [...prev];
             copy[prevIndex] = {
@@ -140,12 +174,14 @@ export function useCart() {
             return [
               ...prev,
               {
-                id: productToAdd.id,
+                id: String(productToAdd.id),
                 productId: productToAdd.id,
                 name: productToAdd.name,
                 image: productToAdd.image ?? null,
                 basePrice: productToAdd.basePrice,
                 quantity,
+                roastId: options?.roastId ?? undefined,
+                grindOptionId: options?.grindOptionId ?? undefined,
               },
             ];
           }
@@ -169,18 +205,29 @@ export function useCart() {
   );
 
   // --- change quantity ---
+  // itemId format: "productId-roastId-grindId" (matches the unique key)
   const handleQuantityChange = async (itemId: string, newQuantity: number) => {
     if (newQuantity <= 0) return handleRemoveItem(itemId);
 
+    // Parse the unique key to get individual IDs
+    const parts = itemId.split("-");
+    const productId = parts[0];
+    const roastId = parts[1] === "no-roast" ? null : parts[1];
+    const grindId = parts[2] === "no-grind" ? null : parts[2];
+
     setCartItems((prev) =>
       prev.map((item) =>
-        item.id === itemId ? { ...item, quantity: newQuantity } : item
+        matchesCartItem(item, productId, roastId, grindId)
+          ? { ...item, quantity: newQuantity }
+          : item
       )
     );
 
     // Update localStorage
     const cart = getCartFromLocalStorage();
-    const index = cart.findIndex((item) => item.id === itemId);
+    const index = cart.findIndex((item) =>
+      matchesCartItem(item, productId, roastId, grindId)
+    );
     if (index > -1) {
       cart[index].quantity = newQuantity;
       saveCartToLocalStorage(cart);
@@ -191,11 +238,20 @@ export function useCart() {
   };
 
   // --- remove ---
+  // itemId format: "productId-roastId-grindId" (matches the unique key)
   const handleRemoveItem = async (itemId: string) => {
-    setCartItems((prev) => prev.filter((item) => item.id !== itemId));
+    // Parse the unique key to get individual IDs
+    const parts = itemId.split("-");
+    const productId = parts[0];
+    const roastId = parts[1] === "no-roast" ? null : parts[1];
+    const grindId = parts[2] === "no-grind" ? null : parts[2];
+
+    setCartItems((prev) =>
+      prev.filter((item) => !matchesCartItem(item, productId, roastId, grindId))
+    );
 
     const updated = getCartFromLocalStorage().filter(
-      (item) => item.id !== itemId
+      (item) => !matchesCartItem(item, productId, roastId, grindId)
     );
     saveCartToLocalStorage(updated);
     try {
@@ -203,33 +259,69 @@ export function useCart() {
     } catch {}
   };
 
+  // itemId format: "productId-roastId-grindId" (matches the unique key)
   const handleUpdateItemOptions = async (
     itemId: string,
     updates: { roastId?: string; grindOptionId?: string }
   ) => {
-    // currently only server would handle option prices; keep as no-op for local-first
-    if (!isSignedIn) {
-      console.warn(
-        "Option updates require server sync; currently skipped in local-first mode."
-      );
-      return;
+    // Parse the unique key to get individual IDs
+    const parts = itemId.split("-");
+    const productId = parts[0];
+    const roastId = parts[1] === "no-roast" ? null : parts[1];
+    const grindId = parts[2] === "no-grind" ? null : parts[2];
+
+    // Update local state
+    setCartItems((prev) =>
+      prev.map((item) =>
+        matchesCartItem(item, productId, roastId, grindId)
+          ? { ...item, ...updates }
+          : item
+      )
+    );
+
+    // Update localStorage
+    const cart = getCartFromLocalStorage();
+    const index = cart.findIndex((item) =>
+      matchesCartItem(item, productId, roastId, grindId)
+    );
+    if (index > -1) {
+      if (updates.roastId !== undefined) cart[index].roastId = updates.roastId;
+      if (updates.grindOptionId !== undefined)
+        cart[index].grindOptionId = updates.grindOptionId;
+      saveCartToLocalStorage(cart);
+      try {
+        dispatchCartUpdateEvent();
+      } catch {}
     }
 
-    await fetch(`/api/cart/item/${itemId}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(updates),
-    });
-
-    // refresh from server/local after change
-    fetchCart();
+    // If signed in, also sync with server (optional/future)
+    if (isSignedIn) {
+      try {
+        await fetch(`/api/cart/item/${itemId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(updates),
+        });
+      } catch (e) {
+        console.error("Failed to sync option update to server", e);
+      }
+    }
   };
 
   const totalItems = cartItems.reduce((t, item) => t + (item.quantity || 0), 0);
-  const totalPrice = cartItems.reduce(
-    (t, item) => t + (item.basePrice || 0) * (item.quantity || 0),
-    0
-  );
+  const totalPrice = cartItems.reduce((t, item) => {
+    // Find selected roast and grind option
+    const selectedRoast = roasts.find((r) => r.id === item.roastId);
+    const selectedGrind = grindOptions.find((g) => g.id === item.grindOptionId);
+
+    // Calculate dynamic price: (basePrice × roastMultiplier) + grindExtraCost
+    const roastMultiplier = selectedRoast?.defaultMultiplier ?? 1.0;
+    const grindExtraCost = selectedGrind?.extraCost ?? 0;
+    const adjustedPrice =
+      (item.basePrice || 0) * roastMultiplier + grindExtraCost;
+
+    return t + adjustedPrice * (item.quantity || 0);
+  }, 0);
   const formattedTotalPrice = new Intl.NumberFormat("en-IN", {
     style: "currency",
     currency: "INR",
@@ -250,6 +342,8 @@ export function useCart() {
           image: item.image,
           basePrice: item.basePrice,
           quantity: item.quantity,
+          roastId: item.roastId,
+          grindOptionId: item.grindOptionId,
         }))
       );
     };

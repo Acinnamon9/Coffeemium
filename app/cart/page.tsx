@@ -1,11 +1,11 @@
-import { auth } from "@clerk/nextjs/serverq";
+import { auth } from "@clerk/nextjs/server";
 import CartClient from "./CartClient";
 import { redirect } from "next/navigation";
 
-export default function Page() {
-  const { userId } = auth();
+export default async function Page() {
+  const { userId } = await auth();
   if (!userId) {
-    redirect("/sign-in?redirect_url=/cart");
+redirect("/login?redirect_url=/cart");
   }
   return <CartClient />;
 }

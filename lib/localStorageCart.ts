@@ -18,18 +18,29 @@ export const saveCartToLocalStorage = (cart: any[]) => {
 
 export const addToLocalStorageCart = (productToAdd: any) => {
   const cart = getCartFromLocalStorage();
+
+  // Match based on unique combination: productId + roastId + grindOptionId
+  // This mirrors the database @@unique constraint
   const existingItemIndex = cart.findIndex(
-    (item: any) => item.id === productToAdd.id
+    (item: any) =>
+      item.id === productToAdd.id &&
+      (item.roastId ?? null) === (productToAdd.roastId ?? null) &&
+      (item.grindOptionId ?? null) === (productToAdd.grindOptionId ?? null)
   );
 
   if (existingItemIndex > -1) {
-    // If item exists, increment quantity
+    // If item exists with same roast/grind combo, increment quantity
     cart[existingItemIndex].quantity += 1;
   } else {
-    // If item does not exist, add it with quantity 1
+    // If item does not exist with this roast/grind combo, add it with quantity 1
     // Ensure productToAdd has an id and basePrice, and add quantity
     if (productToAdd.id && productToAdd.basePrice !== undefined) {
-      cart.push({ ...productToAdd, quantity: 1 });
+      cart.push({
+        ...productToAdd,
+        quantity: 1,
+        roastId: productToAdd.roastId ?? null,
+        grindOptionId: productToAdd.grindOptionId ?? null,
+      });
     } else {
       console.error(
         "Product missing id or basePrice for localStorage cart:",
