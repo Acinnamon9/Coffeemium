@@ -1,11 +1,13 @@
 "use client";
 
+import { motion, AnimatePresence } from "framer-motion";
 import { CartItemDisplay } from "@/components/cart/CartItemDisplay";
 import CartHeader from "@/components/cart/CartHeader";
 import EmptyCart from "@/components/cart/EmptyCart";
 import OrderSummary from "@/components/cart/OrderSummary";
 import { useCart } from "@/hooks/useCart";
 import { useState } from "react";
+
 export default function CartClient() {
   const {
     cartItems,
@@ -19,25 +21,26 @@ export default function CartClient() {
     handleQuantityChange,
     handleRemoveItem,
     handleUpdateItemOptions,
+    lastRemovedItem,
+    undoRemoveItem,
   } = useCart();
 
-  // Toast state
   const [toastMessage, setToastMessage] = useState<string>("");
   const triggerToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(""), 3000);
   };
 
-  // Wrapper callbacks to show toast feedback
   const handleQuantityChangeWithToast = (itemId: string, qty: number) => {
     handleQuantityChange(itemId, qty);
     triggerToast("Quantity updated");
   };
+
   const handleRemoveItemWithToast = (itemId: string) => {
     handleRemoveItem(itemId);
-    console.log(itemId); //to be removed later
     triggerToast("Item removed");
   };
+
   const handleUpdateItemOptionsWithToast = async (
     itemId: string,
     updates: { roastId?: string | null; grindOptionId?: string | null }
@@ -50,70 +53,126 @@ export default function CartClient() {
     triggerToast("Item options updated");
   };
 
-  if (loading) {
+  if (loading)
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center animate-pulse">
         Loading cart...
       </div>
     );
-  }
 
-  if (error) {
+  if (error)
     return (
       <div className="min-h-screen flex items-center justify-center text-red-500">
         Error: {error}
       </div>
     );
-  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <CartHeader />
 
-      <main className="grow px-6 pt-12 pb-20 bg-[#f8fafc] animate-fade-in">
-        <h1 className="text-4xl font-semibold tracking-tight text-gray-900 mb-12 text-center">
+      <main className="grow px-6 pt-12 pb-20 bg-[#f8fafc]">
+        <motion.h1
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+          className="text-4xl font-semibold tracking-tight text-gray-900 mb-12 text-center"
+        >
           Your Cart
-        </h1>
+        </motion.h1>
 
-        {cartItems.length === 0 ? (
-          <EmptyCart />
-        ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 lg:gap-12 max-w-7xl mx-auto">
-            {/* LEFT: Cart Items */}
-            <section className="lg:col-span-2 bg-white p-8 rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.05)] border border-gray-100">
-              <h2 className="text-xl font-semibold mb-6 tracking-tight text-gray-800">
-                Items
-              </h2>
+        <AnimatePresence mode="popLayout">
+          {cartItems.length === 0 ? (
+            <motion.div
+              key="empty"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              <EmptyCart />
+            </motion.div>
+          ) : (
+            <motion.div
+              key="cart"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              transition={{ duration: 0.4 }}
+              className="grid grid-cols-1 lg:grid-cols-3 gap-10 lg:gap-12 max-w-7xl mx-auto"
+            >
+              <section className="lg:col-span-2 bg-white p-8 rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.05)] border border-gray-100">
+                <h2 className="text-xl font-semibold mb-6 tracking-tight text-gray-800">
+                  Items
+                </h2>
 
-              {cartItems.map((item) => {
-                // Create unique key from productId + roastId + grindOptionId
-                // This matches the database unique constraint
-                const uniqueKey = `${item.id}-${item.roastId ?? "no-roast"}-${item.grindOptionId ?? "no-grind"}`;
+                <AnimatePresence>
+                  {cartItems.map((item) => {
+                    const uniqueKey = `${item.id}-${item.roastId ?? "no-roast"}-${item.grindOptionId ?? "no-grind"}`;
 
-                return (
-                  <CartItemDisplay
-                    key={uniqueKey}
-                    item={item}
-                    isLoggedIn={isLoggedIn}
-                    roasts={roasts}
-                    grindOptions={grindOptions}
-                    onQuantityChange={handleQuantityChangeWithToast}
-                    onRemoveItem={handleRemoveItemWithToast}
-                    onUpdateItemOptions={handleUpdateItemOptionsWithToast}
-                  />
-                );
-              })}
-            </section>
+                    return (
+                      <motion.div
+                        key={uniqueKey}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 10 }}
+                        transition={{ duration: 0.25 }}
+                      >
+                        <CartItemDisplay
+                          item={item}
+                          isLoggedIn={isLoggedIn}
+                          roasts={roasts}
+                          grindOptions={grindOptions}
+                          onQuantityChange={handleQuantityChangeWithToast}
+                          onRemoveItem={handleRemoveItemWithToast}
+                          onUpdateItemOptions={handleUpdateItemOptionsWithToast}
+                        />
+                      </motion.div>
+                    );
+                  })}
+                </AnimatePresence>
+              </section>
 
-            {/* RIGHT: Order Summary */}
-            <OrderSummary
-              totalItems={totalItems}
-              formattedTotalPrice={formattedTotalPrice}
-            />
-          </div>
-        )}
+              <OrderSummary
+                totalItems={totalItems}
+                formattedTotalPrice={formattedTotalPrice}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </main>
-      {toastMessage && <div className="toast">{toastMessage}</div>}
+
+      <AnimatePresence>
+        {toastMessage && (
+          <motion.div
+            key="toast"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            transition={{ duration: 0.2 }}
+            className="toast"
+          >
+            {toastMessage}
+          </motion.div>
+        )}
+        {lastRemovedItem && (
+          <motion.div
+            key="undo-toast"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            transition={{ duration: 0.2 }}
+            className="fixed bottom-4 right-4 bg-gray-900 text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-3"
+          >
+            <span>Item removed</span>
+            <button
+              onClick={undoRemoveItem}
+              className="text-amber-400 font-semibold hover:underline"
+            >
+              Undo
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

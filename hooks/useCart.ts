@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useUser } from "@clerk/nextjs";
 import { CartItem, Roast, GrindOption } from "@/app/cart/cart.types";
 
@@ -9,19 +9,22 @@ export function useCart() {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [roasts, setRoasts] = useState<Roast[]>([]);
   const [grindOptions, setGrindOptions] = useState<GrindOption[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Undo-support state
+  const [lastRemovedItem, setLastRemovedItem] = useState<CartItem | null>(null);
+  const undoTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const fetchCart = useCallback(async () => {
     if (!isLoaded) return;
 
     if (!isSignedIn) {
       setCartItems([]);
-      setLoading(false);
+      setInitialLoading(false);
       return;
     }
 
-    setLoading(true);
     try {
       const res = await fetch("/api/cart", { cache: "no-store" });
       if (!res.ok) throw new Error("Failed to fetch cart");
@@ -41,7 +44,7 @@ export function useCart() {
     } catch (err: any) {
       setError(err.message ?? "Cart load failed");
     } finally {
-      setLoading(false);
+      setInitialLoading(false);
     }
   }, [isLoaded, isSignedIn]);
 
@@ -51,34 +54,73 @@ export function useCart() {
       const data = await res.json();
       setRoasts(data.roasts || []);
       setGrindOptions(data.grindOptions || []);
-      const defaultRoast = data.roasts?.[0]?.id ?? null;
-      const defaultGrind = data.grindOptions?.[0]?.id ?? null;
     } catch (err) {
       console.error("Failed to load options", err);
     }
   }, []);
 
+  /** OPTIMISTIC UPDATE ↓↓↓ */
+  const updateItemLocally = (itemId: string, changes: Partial<CartItem>) =>
+    setCartItems((prev) =>
+      prev.map((item) => (item.id === itemId ? { ...item, ...changes } : item))
+    );
+
   const handleQuantityChange = async (itemId: string, quantity: number) => {
     if (!isSignedIn) return;
     if (quantity <= 0) return handleRemoveItem(itemId);
 
-    await fetch(`/api/cart/item/${itemId}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ quantity }),
-    });
+    const prevItems = [...cartItems];
+    updateItemLocally(itemId, { quantity });
 
-    await fetchCart();
+    try {
+      const res = await fetch(`/api/cart/item/${itemId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ quantity }),
+      });
+
+      if (!res.ok) throw new Error();
+    } catch {
+      setCartItems(prevItems);
+    }
   };
 
   const handleRemoveItem = async (itemId: string) => {
     if (!isSignedIn) return;
 
-    await fetch(`/api/cart/item/${itemId}`, {
-      method: "DELETE",
-    });
+    const prevItems = [...cartItems];
+    const removed = cartItems.find((i) => i.id === itemId);
+    if (!removed) return;
 
-    await fetchCart();
+    // Optimistically remove from UI
+    setCartItems((prev) => prev.filter((i) => i.id !== itemId));
+    setLastRemovedItem(removed);
+
+    // Schedule actual delete, giving time to undo
+    undoTimeoutRef.current = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/cart/item/${itemId}`, {
+          method: "DELETE",
+        });
+        if (!res.ok) throw new Error();
+      } catch {
+        console.error("Failed delete request, restoring items");
+        setCartItems(prevItems);
+      } finally {
+        setLastRemovedItem(null);
+      }
+    }, 4000); // 4s undo window
+  };
+
+  const undoRemoveItem = () => {
+    if (!lastRemovedItem) return;
+
+    if (undoTimeoutRef.current) {
+      clearTimeout(undoTimeoutRef.current);
+    }
+
+    setCartItems((prev) => [...prev, lastRemovedItem]);
+    setLastRemovedItem(null);
   };
 
   const handleUpdateItemOptions = async (
@@ -87,22 +129,29 @@ export function useCart() {
   ) => {
     if (!isSignedIn) return;
 
-    await fetch(`/api/cart/item/${itemId}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(updates),
-    });
+    const prevItems = [...cartItems];
+    updateItemLocally(itemId, updates);
 
-    await fetchCart();
+    try {
+      const res = await fetch(`/api/cart/item/${itemId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updates),
+      });
+
+      if (!res.ok) throw new Error();
+    } catch {
+      setCartItems(prevItems);
+    }
   };
 
-  const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+  const totalItems = cartItems.reduce((s, i) => s + i.quantity, 0);
   const totalPrice = cartItems.reduce((t, item) => {
     const roast = roasts.find((r) => r.id === item.roastId);
     const grind = grindOptions.find((g) => g.id === item.grindOptionId);
-    const roastMultiplier = roast?.defaultMultiplier ?? 1;
+    const roastMult = roast?.defaultMultiplier ?? 1;
     const grindCost = grind?.extraCost ?? 0;
-    return t + (item.basePrice * roastMultiplier + grindCost) * item.quantity;
+    return t + (item.basePrice * roastMult + grindCost) * item.quantity;
   }, 0);
 
   const formattedTotalPrice = new Intl.NumberFormat("en-IN", {
@@ -116,6 +165,8 @@ export function useCart() {
     fetchOptions();
     fetchCart();
   }, [fetchOptions, fetchCart]);
+
+  // 🔁 Add-to-cart preserved and compatible
   const addToCart = async (
     product: { id: string; name: string; basePrice: number; image?: string },
     quantity = 1,
@@ -144,7 +195,10 @@ export function useCart() {
 
       if (!res.ok) {
         const err = await res.json();
-        return { success: false, error: err.error ?? "Failed to add to cart" };
+        return {
+          success: false,
+          error: err.error ?? "Failed to add to cart",
+        };
       }
 
       await fetchCart();
@@ -159,7 +213,7 @@ export function useCart() {
     cartItems,
     roasts,
     grindOptions,
-    loading,
+    loading: initialLoading,
     error,
     isLoggedIn,
     totalItems,
@@ -167,6 +221,8 @@ export function useCart() {
     handleQuantityChange,
     handleRemoveItem,
     handleUpdateItemOptions,
+    lastRemovedItem,
+    undoRemoveItem,
     addToCart,
   };
 }
