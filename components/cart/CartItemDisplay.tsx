@@ -1,6 +1,5 @@
 "use client";
 import Image from "next/image";
-import { useState } from "react";
 import { motion } from "framer-motion";
 
 import { CartItem, Roast, GrindOption } from "../../app/cart/cart.types";

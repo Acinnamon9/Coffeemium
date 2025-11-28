@@ -35,6 +35,7 @@ export default function CartClient() {
   };
   const handleRemoveItemWithToast = (itemId: string) => {
     handleRemoveItem(itemId);
+    console.log(itemId); //to be removed later
     triggerToast("Item removed");
   };
   const handleUpdateItemOptionsWithToast = async (
@@ -77,7 +78,7 @@ export default function CartClient() {
         {cartItems.length === 0 ? (
           <EmptyCart />
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 lg:gap-12 max-w-screen-xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 lg:gap-12 max-w-7xl mx-auto">
             {/* LEFT: Cart Items */}
             <section className="lg:col-span-2 bg-white p-8 rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.05)] border border-gray-100">
               <h2 className="text-xl font-semibold mb-6 tracking-tight text-gray-800">
