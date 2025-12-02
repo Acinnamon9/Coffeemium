@@ -11,14 +11,16 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useCart } from "@/hooks/useCart";
+import { motion } from "framer-motion";
+import { toast } from "sonner";
 import { useState } from "react";
 import Image from "next/image";
 
 type Product = {
-  id: string | number;
+  id: string;
   name: string;
   description?: string | null;
-  image?: string | null;
+  image?: string;
   basePrice: number;
 };
 
@@ -31,7 +33,6 @@ export default function ProductCard({
 }) {
   const { addToCart, loading: cartLoading } = useCart();
   const [isAdding, setIsAdding] = useState(false);
-  const [message, setMessage] = useState("");
 
   const price = new Intl.NumberFormat("en-IN", {
     style: "currency",
@@ -42,65 +43,72 @@ export default function ProductCard({
     if (cartLoading || isAdding) return;
 
     setIsAdding(true);
-    setMessage("");
-
     const result = await addToCart(product);
+    setIsAdding(false);
 
     if (result.success) {
-      setMessage(`${product.name} added to cart!`);
+      toast.success(`${product.name} was added to cart successfully.`, {
+        duration: 2500,
+      });
     } else {
-      setMessage(`Failed: ${result.error}`);
+      toast.error(
+        result.error ?? "Failed to add to cart. Something went wrong."
+      );
     }
-
-    setIsAdding(false);
   };
 
   return (
-    <Card className="flex flex-col">
-      <CardHeader>
-        <CardTitle>{product.name}</CardTitle>
-        <CardDescription>{product.description}</CardDescription>
-      </CardHeader>
-
-      <CardContent className="grow">
-        {product.image ? (
-          <Image
-            src={product.image}
-            alt={product.name}
-            width={100}
-            height={100}
-            className="w-full aspect-square object-contain mb-4 rounded-md"
-          />
-        ) : (
-          <div className="w-full aspect-square bg-gray-100 mb-4 rounded-md" />
-        )}
-
-        <div className="flex justify-between items-center">
-          <p className="text-gray-600">{price}</p>
-          {badge && (
-            <Badge className="bg-[#eedacc] text-[#E57F3A] border-[#E57F3A] shadow-md">
-              {badge}
-            </Badge>
+    <motion.div
+      whileHover={{ scale: 1.03, y: -3 }}
+      transition={{ duration: 0.18 }}
+      className="cursor-pointer"
+    >
+      <Card className="flex flex-col shadow-sm">
+        <CardHeader>
+          <CardTitle className="truncate">{product.name}</CardTitle>
+          {product.description && (
+            <CardDescription className="truncate">
+              {product.description}
+            </CardDescription>
           )}
-        </div>
-      </CardContent>
+        </CardHeader>
 
-      <CardFooter className="flex flex-col gap-2">
-        <Button className="w-full">View Details</Button>
+        <CardContent className="grow">
+          {product.image ? (
+            <Image
+              src={product.image}
+              alt={product.name}
+              width={100}
+              height={100}
+              className="w-full aspect-square object-contain mb-4 rounded-md"
+            />
+          ) : (
+            <div className="w-full aspect-square bg-gray-100 mb-4 rounded-md" />
+          )}
 
-        <Button
-          variant="outline"
-          onClick={handleAddToCart}
-          disabled={isAdding || cartLoading}
-          className="w-full"
-        >
-          {isAdding ? "Adding..." : "Add to Cart"}
-        </Button>
+          <div className="flex justify-between items-center">
+            <p className="text-gray-600 font-medium">{price}</p>
+            {badge && (
+              <Badge className="bg-[#eedacc] text-[#E57F3A] border-[#E57F3A] shadow-sm">
+                {badge}
+              </Badge>
+            )}
+          </div>
+        </CardContent>
 
-        {message && (
-          <span className="text-sm text-green-600 text-center">{message}</span>
-        )}
-      </CardFooter>
-    </Card>
+        <CardFooter className="flex flex-col gap-2">
+          <Button className="w-full">View Details</Button>
+
+          <Button
+            variant="outline"
+            onClick={handleAddToCart}
+            disabled={isAdding || cartLoading}
+            className="w-full"
+          >
+            {isAdding ? "Adding..." : "Add to Cart"}
+          </Button>
+        </CardFooter>
+      </Card>
+    </motion.div>
   );
 }

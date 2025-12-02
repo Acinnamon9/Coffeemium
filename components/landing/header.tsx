@@ -112,17 +112,6 @@ export default function Header() {
                   </Link>
                 </NavigationMenuLink>
               </NavigationMenuItem>
-
-              <NavigationMenuItem>
-                <NavigationMenuLink href="#about" asChild>
-                  <Link
-                    href="#about"
-                    className="px-2 py-1 rounded text-muted-foreground hover:text-foreground"
-                  >
-                    About Us
-                  </Link>
-                </NavigationMenuLink>
-              </NavigationMenuItem>
             </NavigationMenuList>
           </NavigationMenu>
         </div>

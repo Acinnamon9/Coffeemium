@@ -1,6 +1,9 @@
+"use client";
 import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
 
 export default function Hero() {
+  const router = useRouter();
   return (
     <section className="relative h-96 flex items-center justify-center text-white mt-4">
       <div
@@ -16,7 +19,10 @@ export default function Hero() {
           Start your day right with exceptional coffee, delivered straight to
           your door.
         </p>
-        <Button className="bg-amber-50 text-amber-900 hover:bg-amber-100 px-8 py-3 rounded-full text-lg font-semibold">
+        <Button
+          onClick={() => router.push("/shop")}
+          className="bg-amber-50 text-amber-900 hover:bg-amber-100 px-8 py-3 rounded-full text-lg font-semibold"
+        >
           Shop All Coffees
         </Button>
       </div>

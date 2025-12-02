@@ -30,14 +30,17 @@ export const StepCard = ({ step, className }: StepCardProps) => {
     return () => document.removeEventListener("keydown", onKey);
   }, [open]);
 
+  const prevOpen = useRef(open);
+
   // Move focus into modal when opening, restore to trigger when closing
   useEffect(() => {
-    if (open) {
+    if (open && !prevOpen.current) {
       // small timeout to ensure rendering
       setTimeout(() => modalRef.current?.focus(), 0);
-    } else {
+    } else if (!open && prevOpen.current) {
       triggerRef.current?.focus();
     }
+    prevOpen.current = open;
   }, [open]);
 
   // Focus trap: keep Tab navigation within the modal while open

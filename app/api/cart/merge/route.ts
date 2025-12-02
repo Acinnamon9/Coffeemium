@@ -1,14 +1,21 @@
-// /app/api/cart/merge/route.ts
+// ------------------------------------------------------------
+// i:\test-template\app\api\cart\merge\route.ts
+// ------------------------------------------------------------
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import { PrismaClient } from "@prisma/client";
 import { NextResponse } from "next/server";
 import { mergeItemSchema } from "@/lib/api/cartHelpers";
+import type { ZodError, ZodIssue, SafeParseReturnType } from "zod";
 
-function errorJson(message: string, status = 500) {
-  return NextResponse.json({ error: message }, { status });
+// Helper to turn a SafeParseReturnType into a type‑guard for the success case
+function isZodSuccess<T>(
+  result: SafeParseReturnType<T>
+): result is { success: true; data: T } {
+  return result.success;
 }
 
+// -----------------------------------------------------------------
 export async function POST(req: Request) {
   try {
     const { userId } = await auth();
@@ -17,10 +24,23 @@ export async function POST(req: Request) {
     const body = await req.json();
     const rawItems = Array.isArray(body.items) ? body.items : [];
 
-    // Validate/normalize guest cart items (soft validation)
+    // -------------------------------------------------------------
+    // Validate / normalize guest cart items (soft validation)
+    // -------------------------------------------------------------
     const items = rawItems
-      .map((item: any) => mergeItemSchema.safeParse(item))
-      .filter((r) => r.success)
+      // Explicitly type the result of safeParse
+      .map(
+        (
+          item
+        ): ZodResult<{
+          id: string;
+          quantity: number;
+          basePrice?: number;
+        }> => mergeItemSchema.safeParse(item)
+      )
+      // Narrow to the successful parses
+      .filter(isZodSuccess)
+      // Extract the validated data
       .map((r) => r.data);
 
     if (!items.length)
@@ -29,7 +49,9 @@ export async function POST(req: Request) {
         { status: 200 }
       );
 
+    // -------------------------------------------------------------
     // Merge inside a typed transaction
+    // -------------------------------------------------------------
     await prisma.$transaction(async (tx: PrismaClient) => {
       let cart = await tx.cart.findUnique({ where: { userId } });
 
@@ -73,4 +95,9 @@ export async function POST(req: Request) {
     console.error("POST /api/cart/merge error:", err);
     return errorJson(err?.message ?? "Failed to merge cart", 500);
   }
+}
+
+// -----------------------------------------------------------------
+function errorJson(message: string, status = 500) {
+  return NextResponse.json({ error: message }, { status });
 }

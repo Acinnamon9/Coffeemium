@@ -24,6 +24,7 @@ model User {
   accounts      Account[]
   sessions      Session[]
   cart          Cart?
+  orders        Order[]
 
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -76,6 +77,8 @@ model Product {
   // New: One-to-one relation to ProductDetail
   detail        ProductDetail?
   cartItems     CartItem[]
+  orderItems    OrderItem[]
+  stock         Int            @default(0)
 }
 
 model Roast {
@@ -86,6 +89,7 @@ model Roast {
   defaultMultiplier Float?
   productRoasts     ProductRoast[]
   cartItems         CartItem[]
+  orderItems        OrderItem[]
 }
 
 // Grind options offered at checkout (matches existing DB migration)
@@ -94,6 +98,7 @@ model GrindOption {
   name      String
   extraCost Float
   cartItems CartItem[]
+  orderItems OrderItem[]
 }
 
 
@@ -144,5 +149,35 @@ model CartItem {
   grindOption GrindOption? @relation(fields: [grindOptionId], references: [id], onDelete: Cascade)
 
   @@unique([cartId, productId, roastId, grindOptionId])
+}
+
+model Order {
+  id          String      @id @default(cuid())
+  userId      String
+  status      String      @default("PENDING")
+  totalPrice  Float
+  address     String
+  phone       String
+  notes       String?
+  createdAt   DateTime    @default(now())
+  items       OrderItem[]
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model OrderItem {
+  id            String  @id @default(cuid())
+  orderId       String
+  productId     String
+  quantity      Int
+  basePrice     Float
+  roastId       String?
+  grindOptionId String?
+
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  roast       Roast?      @relation(fields: [roastId], references: [id], onDelete: Cascade)
+  grindOption GrindOption? @relation(fields: [grindOptionId], references: [id], onDelete: Cascade)
+
+  @@unique([orderId, productId, roastId, grindOptionId])
 }
 
