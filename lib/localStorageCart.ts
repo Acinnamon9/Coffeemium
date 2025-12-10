@@ -80,7 +80,7 @@ export const updateLocalStorageCartQuantity = (
 
 export const getCartItemCount = () => {
   const cart = getCartFromLocalStorage();
-  return cart.reduce((total, item) => total + item.quantity, 0);
+  return cart.reduce((total: number, item: any) => total + item.quantity, 0);
 };
 
 export function clearLocalStorageCart() {

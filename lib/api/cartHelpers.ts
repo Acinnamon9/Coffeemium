@@ -1,5 +1,5 @@
 // /lib/api/cartHelpers.ts
-import { Prisma } from "@prisma/client";
+import { Prisma } from "@/app/generated/prisma/client";
 import { z } from "zod";
 
 export type CartItemWithPriceRelations = Prisma.CartItemGetPayload<{

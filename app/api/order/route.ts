@@ -31,7 +31,7 @@ export async function POST(req: Request) {
     // Calculate total price
     const totalPrice = cart.items.reduce((total, item) => {
       let itemPrice = item.product.basePrice;
-      if (item.roast?.roastMultiplier) {
+      if (item.roast?.defaultMultiplier) {
         // Assuming roast doesn't affect price in this simple model,
         // but if it did, we'd calculate it here.
         // The prompt didn't specify roast pricing logic in detail for order,
