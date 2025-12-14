@@ -25,6 +25,13 @@ export async function POST(req: NextRequest) {
     const { productId, roastId, grindOptionId, quantity } = parsed.data;
 
     const result = await prisma.$transaction(async (tx) => {
+      // Ensure the user exists to satisfy foreign key constraints
+      await tx.user.upsert({
+        where: { id: userId },
+        update: {},
+        create: { id: userId },
+      });
+
       // Ensure cart exists
       let cart = await tx.cart.findUnique({
         where: { userId },
