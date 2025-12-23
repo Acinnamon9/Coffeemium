@@ -3,6 +3,11 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useUser } from "@clerk/nextjs";
 import { CartItem, Roast, GrindOption } from "@/app/cart/cart.types";
 
+/**
+ * Custom hook to manage shopping cart state and operations.
+ * Handles fetching cart data, optimistic updates, calculating totals,
+ * and performing CRUD operations on cart items.
+ */
 export function useCart() {
   const { isLoaded, isSignedIn } = useUser();
 
@@ -16,6 +21,10 @@ export function useCart() {
   const [lastRemovedItem, setLastRemovedItem] = useState<CartItem | null>(null);
   const undoTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  /**
+   * Fetches the current user's cart from the server.
+   * Merges product details with cart item data.
+   */
   const fetchCart = useCallback(async () => {
     if (!isLoaded) return;
 
@@ -48,6 +57,10 @@ export function useCart() {
     }
   }, [isLoaded, isSignedIn]);
 
+  /**
+   * Fetches available roast types and grind options from the server
+   * to populate selection metadata.
+   */
   const fetchOptions = useCallback(async () => {
     try {
       const res = await fetch("/api/options");
@@ -59,12 +72,23 @@ export function useCart() {
     }
   }, []);
 
-  /** OPTIMISTIC UPDATE ↓↓↓ */
+  /**
+   * Helper for optimistic updates.
+   * Updates the local cart state immediately before the server request completes.
+   * @param itemId - ID of the item to update
+   * @param changes - Partial object containing properties to update
+   */
   const updateItemLocally = (itemId: string, changes: Partial<CartItem>) =>
     setCartItems((prev) =>
       prev.map((item) => (item.id === itemId ? { ...item, ...changes } : item))
     );
 
+  /**
+   * Updates the quantity of a specific cart item.
+   * Uses optimistic updates for UI responsiveness and reverts on failure.
+   * @param itemId - The ID of the cart item.
+   * @param quantity - The new quantity to set.
+   */
   const handleQuantityChange = async (itemId: string, quantity: number) => {
     if (!isSignedIn) return;
     if (quantity <= 0) return handleRemoveItem(itemId);
@@ -85,6 +109,12 @@ export function useCart() {
     }
   };
 
+  /**
+   * Removes an item from the cart.
+   * Implements a "soft delete" by removing from UI immediately but delaying
+   * the server request to allow for undo operations.
+   * @param itemId - The ID of the item to remove.
+   */
   const handleRemoveItem = async (itemId: string) => {
     if (!isSignedIn) return;
 
@@ -112,6 +142,10 @@ export function useCart() {
     }, 4000); // 4s undo window
   };
 
+  /**
+   * Cancels the pending deletion of the last removed item.
+   * Restores the item to the cart state and clears the deletion timer.
+   */
   const undoRemoveItem = () => {
     if (!lastRemovedItem) return;
 
@@ -123,6 +157,11 @@ export function useCart() {
     setLastRemovedItem(null);
   };
 
+  /**
+   * Updates configuration options (Roast, Grind) for a cart item.
+   * @param itemId - The ID of the item.
+   * @param updates - Object containing the new roastId or grindOptionId.
+   */
   const handleUpdateItemOptions = async (
     itemId: string,
     updates: { roastId?: string; grindOptionId?: string }
@@ -145,6 +184,8 @@ export function useCart() {
     }
   };
 
+  // Calculate total items count and total price dynamically based on current cart state.
+  // The price includes base price multipliers (roast) and extra costs (grind).
   const totalItems = cartItems.reduce((s, i) => s + i.quantity, 0);
   const totalPrice = cartItems.reduce((t, item) => {
     const roast = roasts.find((r) => r.id === item.roastId);
@@ -166,7 +207,13 @@ export function useCart() {
     fetchCart();
   }, [fetchOptions, fetchCart]);
 
-  // 🔁 Add-to-cart preserved and compatible
+  /**
+   * Adds a new product to the cart with specified options.
+   * Defaults to first available roast/grind if not specified.
+   * @param product - The product details.
+   * @param quantity - Quantity to add (default 1).
+   * @param options - Selected roast and grind IDs.
+   */
   const addToCart = async (
     product: { id: string; name: string; basePrice: number; image?: string },
     quantity = 1,
@@ -210,18 +257,23 @@ export function useCart() {
   };
 
   return {
+    // Data & State
     cartItems,
     roasts,
     grindOptions,
     loading: initialLoading,
     error,
     isLoggedIn,
+    lastRemovedItem, // Expose for Undo UI
+
+    // Derived Values
     totalItems,
     formattedTotalPrice,
+
+    // Actions
     handleQuantityChange,
     handleRemoveItem,
     handleUpdateItemOptions,
-    lastRemovedItem,
     undoRemoveItem,
     addToCart,
   };

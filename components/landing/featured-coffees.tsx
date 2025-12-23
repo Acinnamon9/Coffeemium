@@ -24,7 +24,7 @@ async function FeaturedCoffees() {
           Premium Selections
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {featuredCoffees.map((coffee: ProductModel, index) => {
+          {featuredCoffees.map((coffee, index) => {
             let badge = "";
             if (index === 0) {
               badge = "Single Origin";
@@ -33,8 +33,22 @@ async function FeaturedCoffees() {
             } else if (index === 2) {
               badge = "On Repeat";
             }
+
+            // Sanitize data for Client Component to avoid passing Dates
+            const serializedProduct = {
+              id: coffee.id,
+              name: coffee.name,
+              description: coffee.description,
+              image: coffee.image,
+              basePrice: coffee.basePrice,
+            };
+
             return (
-              <ProductCard key={coffee.id} product={coffee} badge={badge} />
+              <ProductCard
+                key={coffee.id}
+                product={serializedProduct}
+                badge={badge}
+              />
             );
           })}
         </div>

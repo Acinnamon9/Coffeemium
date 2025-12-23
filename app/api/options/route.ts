@@ -1,6 +1,14 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
+/**
+ * GET handler for retrieving product configuration options.
+ *
+ * Fetches available coffee roasts and grind options from the database
+ * to populate product customization UI on the frontend.
+ *
+ * @returns NextResponse with JSON body: { roasts: Roast[], grindOptions: GrindOption[] }
+ */
 export async function GET() {
   try {
     // Fetch all Roasts and GrindOptions concurrently
