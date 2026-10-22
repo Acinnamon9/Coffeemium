@@ -2,6 +2,7 @@
 
 import React from "react";
 import { Button } from "../ui/button";
+import Link from "next/link";
 
 const ShopNowCta = () => {
   return (
@@ -13,13 +14,14 @@ const ShopNowCta = () => {
         <p className="text-xl text-gray-600 mb-8">
           Explore our exquisite selection of freshly roasted coffees.
         </p>
-        <Button
-          size="lg"
-          className="text-lg px-8 py-4"
-          onClick={() => (window.location.href = "/shop")}
-        >
-          Shop Now
-        </Button>
+        <div className="flex flex-col justify-center gap-3 sm:flex-row">
+          <Button asChild size="lg" className="text-lg px-8 py-4">
+            <Link href="/shop">Shop Now</Link>
+          </Button>
+          <Button asChild size="lg" variant="outline" className="text-lg px-8 py-4">
+            <Link href="/demo">Make this your brand</Link>
+          </Button>
+        </div>
       </div>
     </section>
   );

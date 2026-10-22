@@ -22,6 +22,8 @@ export default function CartHeader() {
               alt="Coffeemium"
               width={48}
               height={48}
+              sizes="48px"
+              quality={70}
               className="object-contain"
             />
             <Coffee className="w-6 h-6 text-[#6c47ff] hidden group-hover:block animate-pulse" />

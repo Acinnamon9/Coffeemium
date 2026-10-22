@@ -1,13 +1,9 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { CartProvider } from "@/hooks/useCart";
 
 import {
   ClerkProvider,
-  SignInButton,
-  SignUpButton,
-  SignedIn,
-  SignedOut,
-  UserButton,
 } from "@clerk/nextjs";
 
 export const metadata: Metadata = {
@@ -31,7 +27,7 @@ export default function RootLayout({
             sizes="341x249"
           />
         </head>
-        <body>{children}</body>
+        <body><CartProvider>{children}</CartProvider></body>
       </html>
     </ClerkProvider>
   );

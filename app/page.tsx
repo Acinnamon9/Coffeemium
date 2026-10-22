@@ -5,6 +5,7 @@ import ShopNowCta from "@/components/landing/shop-now-cta";
 import Header from "@/components/landing/header";
 import Hero from "@/components/landing/hero";
 import Footer from "@/components/landing/footer";
+import LimitedTimeDeal from "@/components/landing/limited-time-deal";
 import CuratedBundles from "@/components/landing/curated-bundles";
 import { getCuratedBundles } from "@/lib/bundles";
 
@@ -15,6 +16,7 @@ export default async function Home() {
       <Header />
       <main className="grow">
         <Hero />
+        <LimitedTimeDeal />
         <FeaturedCoffees />
         <CuratedBundles bundles={bundles} />
         <HowItWorks />

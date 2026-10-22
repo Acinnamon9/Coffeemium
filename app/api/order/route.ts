@@ -1,6 +1,16 @@
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { type CartItemWithPriceRelations } from "@/lib/api/cartHelpers";
+import { z } from "zod";
+import { calculateDealPrice, getDealPercent } from "@/lib/deals";
+
+const orderSchema = z.object({
+  address: z.string().trim().min(5).max(500),
+  phone: z.string().trim().min(7).max(30),
+  notes: z.string().trim().max(500).optional().default(""),
+  paymentMethod: z.enum(["COD", "ONLINE"]),
+});
 
 export async function POST(req: Request) {
   try {
@@ -10,67 +20,60 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const body = await req.json();
-    const { address, phone, notes, paymentMethod } = body;
+    const body = orderSchema.safeParse(await req.json());
+    if (!body.success) {
+      return NextResponse.json({ error: "Invalid order details" }, { status: 400 });
+    }
+    const { address, phone, notes, paymentMethod } = body.data;
 
-    // Get user's cart
-    const cart = await prisma.cart.findUnique({
-      where: { userId },
-      include: {
-        items: {
-          include: {
-            product: true,
-            roast: true,
-            grindOption: true,
+    const order = await prisma.$transaction(async (tx) => {
+      const cart = await tx.cart.findUnique({
+        where: { userId },
+        include: {
+          items: {
+            include: { product: true, roast: true, grindOption: true },
           },
         },
-      },
-    });
+      });
 
-    if (!cart || cart.items.length === 0) {
-      return NextResponse.json({ error: "Cart is empty" }, { status: 400 });
-    }
-
-    // Calculate total price
-    const totalPrice = cart.items.reduce((total, item) => {
-      let itemPrice = item.product.basePrice;
-      if (item.roast?.defaultMultiplier) {
-        // Assuming roast doesn't affect price in this simple model,
-        // but if it did, we'd calculate it here.
-        // The prompt didn't specify roast pricing logic in detail for order,
-        // but cartItem has priceAtAddition. Let's use that if available or recalculate.
-        // Actually, let's use the current logic: basePrice + grind extra cost.
+      if (!cart || cart.items.length === 0) {
+        throw new Error("Cart is empty");
       }
-      if (item.grindOption?.extraCost) {
-        itemPrice += item.grindOption.extraCost;
-      }
-      return total + itemPrice * item.quantity;
-    }, 0);
 
-    // Create Order
-    const order = await prisma.order.create({
-      data: {
-        userId,
-        totalPrice,
-        address,
-        phone,
-        notes,
-        status: paymentMethod === "COD" ? "CONFIRMED" : "PENDING",
-        items: {
-          create: cart.items.map((item) => ({
-            productId: item.productId,
-            quantity: item.quantity,
-            basePrice: item.product.basePrice,
-            roastId: item.roastId,
-            grindOptionId: item.grindOptionId,
-          })),
+      const checkoutNow = new Date();
+      const deal = await tx.featuredDeal.findFirst({
+        where: { id: "primary", isActive: true, startsAt: { lte: checkoutNow }, endsAt: { gt: checkoutNow } },
+        include: { products: { select: { productId: true } } },
+      });
+      const itemPrice = (item: (typeof cart.items)[number]) =>
+        calculateDealPrice(item as CartItemWithPriceRelations, getDealPercent(deal, item.productId));
+
+      const totalPrice = cart.items.reduce((total, item) => {
+        return total + itemPrice(item) * item.quantity;
+      }, 0);
+
+      const createdOrder = await tx.order.create({
+        data: {
+          userId,
+          totalPrice: Number(totalPrice.toFixed(2)),
+          address,
+          phone,
+          notes,
+          status: paymentMethod === "COD" ? "CONFIRMED" : "PENDING",
+          items: {
+            create: cart.items.map((item) => ({
+              productId: item.productId,
+              quantity: item.quantity,
+              basePrice: itemPrice(item),
+              roastId: item.roastId,
+              grindOptionId: item.grindOptionId,
+            })),
+          },
         },
-      },
-    });
+      });
 
-    // Clear Cart
-    await prisma.cartItem.deleteMany({
-      where: { cartId: cart.id },
+      await tx.cartItem.deleteMany({ where: { cartId: cart.id } });
+      return createdOrder;
     });
 
     if (paymentMethod === "ONLINE") {
@@ -88,6 +91,9 @@ export async function POST(req: Request) {
     });
   } catch (error) {
     console.error("Order creation failed:", error);
+    if (error instanceof Error && error.message === "Cart is empty") {
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
     return NextResponse.json(
       { error: "Failed to create order" },
       { status: 500 }

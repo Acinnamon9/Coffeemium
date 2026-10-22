@@ -42,9 +42,12 @@ export const CartItemDisplay = ({
 
   const roastMultiplier = selectedRoast?.defaultMultiplier ?? 1.0;
   const grindExtraCost = selectedGrind?.extraCost ?? 0;
-  const adjustedPrice = item.bundleId && item.priceAtAddition != null
+  const originalPrice = item.bundleId && item.priceAtAddition != null
     ? item.priceAtAddition
     : item.basePrice * roastMultiplier + grindExtraCost;
+  const adjustedPrice = item.bundleId
+    ? originalPrice
+    : item.basePrice * roastMultiplier * (1 - (item.discountPercent ?? 0) / 100) + grindExtraCost;
   const totalPrice = adjustedPrice * item.quantity;
   const price = `₹${totalPrice.toFixed(2)}`;
 
@@ -88,7 +91,7 @@ export const CartItemDisplay = ({
             )}
           </h3>
           <p className="text-sm text-gray-500">
-            ₹{item.basePrice.toFixed(2)} each
+            ₹{item.basePrice.toFixed(2)} base price
           </p>
           {item.bundleName && <span className="mt-1 w-fit rounded-full bg-[#f2e8dc] px-2 py-1 text-xs font-semibold text-[#8b5e3c]">Part of {item.bundleName}</span>}
 
@@ -145,6 +148,7 @@ export const CartItemDisplay = ({
               <span className="font-medium">{selectedGrind?.name}</span>
             </p>
             <div className="border-t border-gray-300 mt-2 pt-2">
+              {item.discountPercent ? <p className="mb-1 flex justify-between text-[#8b5e3c]"><span>Deal discount ({item.discountPercent}%)</span><span>−₹{(originalPrice - adjustedPrice).toFixed(2)}</span></p> : null}
               <p className="flex justify-between font-medium text-gray-800">
                 <span>Item price:</span>
                 <motion.span
@@ -153,7 +157,7 @@ export const CartItemDisplay = ({
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ duration: 0.2 }}
                 >
-                  ₹{adjustedPrice.toFixed(2)}
+                  <span className="inline-flex items-baseline gap-2">{item.discountPercent ? <del className="text-gray-400">₹{originalPrice.toFixed(2)}</del> : null}<span>₹{adjustedPrice.toFixed(2)}</span></span>
                 </motion.span>
               </p>
             </div>
@@ -189,7 +193,7 @@ export const CartItemDisplay = ({
           transition={{ duration: 0.2 }}
           className="font-semibold text-lg"
         >
-          {price}
+          <span className="inline-flex items-baseline gap-2">{item.discountPercent ? <del className="text-sm text-gray-400">₹{(originalPrice * item.quantity).toFixed(2)}</del> : null}{price}</span>
         </motion.span>
 
         <button

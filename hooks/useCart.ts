@@ -2,11 +2,17 @@
 import { createContext, createElement, useContext, useState, useEffect, useCallback, useRef } from "react";
 import { useUser } from "@clerk/nextjs";
 import { CartItem, Roast, GrindOption } from "@/app/cart/cart.types";
+import {
+  clearCartFromLocalStorage,
+  getCartFromLocalStorage,
+  saveCartToLocalStorage,
+} from "@/lib/localStorageCart";
 
 type CartApiItem = {
   id: string;
   productId: string;
   quantity: number;
+  discountPercent?: number;
   product?: {
     basePrice?: number | null;
     name?: string | null;
@@ -36,12 +42,14 @@ function useCartState() {
   // Undo-support state
   const [lastRemovedItem, setLastRemovedItem] = useState<CartItem | null>(null);
   const undoTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const mergingGuestCartRef = useRef(false);
 
   const fetchCart = useCallback(async () => {
     if (!isLoaded) return;
 
     if (!isSignedIn) {
-      setCartItems([]);
+      const guestItems = getCartFromLocalStorage();
+      setCartItems(guestItems);
       setInitialLoading(false);
       return;
     }
@@ -59,6 +67,7 @@ function useCartState() {
           basePrice: i.product?.basePrice ?? 0,
           name: i.product?.name ?? "Unknown",
           image: i.product?.image ?? null,
+          discountPercent: i.discountPercent ?? 0,
           roastId: i.roastId ?? undefined,
           grindOptionId: i.grindOptionId ?? undefined,
           bundleId: i.bundleId ?? undefined,
@@ -82,6 +91,45 @@ function useCartState() {
       console.error("Failed to load options", err);
     }
   }, []);
+
+  const mergeGuestCart = useCallback(async () => {
+    if (!isLoaded || !isSignedIn || mergingGuestCartRef.current) return true;
+
+    const guestItems = getCartFromLocalStorage();
+    if (guestItems.length === 0) return true;
+
+    mergingGuestCartRef.current = true;
+    setError(null);
+    try {
+      const res = await fetch("/api/cart/merge", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          items: guestItems.map((item) => ({
+            productId: String(item.productId),
+            quantity: item.quantity,
+            roastId: item.roastId ?? null,
+            grindOptionId: item.grindOptionId ?? null,
+          })),
+        }),
+      });
+
+      if (!res.ok) {
+        const result = (await res.json().catch(() => null)) as { error?: string } | null;
+        throw new Error(result?.error ?? "Unable to sync your saved cart. Please try again.");
+      }
+
+      clearCartFromLocalStorage();
+      return true;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Unable to sync your saved cart. Please try again.";
+      setError(message);
+      console.error("Guest cart merge failed:", err);
+      return false;
+    } finally {
+      mergingGuestCartRef.current = false;
+    }
+  }, [isLoaded, isSignedIn]);
 
   /** OPTIMISTIC UPDATE ↓↓↓ */
   const updateItemLocally = (itemId: string, changes: Partial<CartItem>) =>
@@ -175,7 +223,10 @@ function useCartState() {
     const grind = grindOptions.find((g) => g.id === item.grindOptionId);
     const roastMult = roast?.defaultMultiplier ?? 1;
     const grindCost = grind?.extraCost ?? 0;
-    const unitPrice = item.bundleId && item.priceAtAddition != null ? item.priceAtAddition : item.basePrice * roastMult + grindCost;
+    const baseProductPrice = item.basePrice * roastMult;
+    const unitPrice = item.bundleId && item.priceAtAddition != null
+      ? item.priceAtAddition
+      : baseProductPrice * (1 - (item.discountPercent ?? 0) / 100) + grindCost;
     return t + unitPrice * item.quantity;
   }, 0);
 
@@ -188,8 +239,19 @@ function useCartState() {
 
   useEffect(() => {
     fetchOptions();
-    fetchCart();
-  }, [fetchOptions, fetchCart]);
+    if (!isLoaded) return;
+
+    if (!isSignedIn) {
+      setCartItems(getCartFromLocalStorage());
+      setInitialLoading(false);
+      return;
+    }
+
+    void (async () => {
+      await mergeGuestCart();
+      await fetchCart();
+    })();
+  }, [fetchOptions, fetchCart, isLoaded, isSignedIn, mergeGuestCart]);
 
   // 🔁 Add-to-cart preserved and compatible
   const addToCart = async (
@@ -197,18 +259,53 @@ function useCartState() {
     quantity = 1,
     options?: { roastId?: string | null; grindOptionId?: string | null }
   ) => {
-    if (!isSignedIn) {
-      return { success: false, error: "User not signed in" };
-    }
-
     const defaultRoast = roasts[0]?.id ?? null;
     const defaultGrind = grindOptions[0]?.id ?? null;
+    const roastId = options?.roastId ?? defaultRoast;
+    const grindOptionId = options?.grindOptionId ?? defaultGrind;
+
+    if (!isSignedIn) {
+      try {
+        const guestItems = getCartFromLocalStorage();
+        const existingIndex = guestItems.findIndex(
+          (item) =>
+            String(item.productId) === product.id &&
+            (item.roastId ?? null) === roastId &&
+            (item.grindOptionId ?? null) === grindOptionId &&
+            !item.bundleId
+        );
+
+        if (existingIndex >= 0) {
+          guestItems[existingIndex] = {
+            ...guestItems[existingIndex],
+            quantity: guestItems[existingIndex].quantity + quantity,
+          };
+        } else {
+          guestItems.push({
+            id: `guest-${typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`}`,
+            productId: product.id,
+            name: product.name,
+            image: product.image ?? null,
+            basePrice: product.basePrice,
+            quantity,
+            roastId: roastId ?? undefined,
+            grindOptionId: grindOptionId ?? undefined,
+          });
+        }
+
+        saveCartToLocalStorage(guestItems);
+        setCartItems(guestItems);
+        return { success: true };
+      } catch {
+        return { success: false, error: "Unable to save your cart in this browser." };
+      }
+    }
 
     const body = {
       productId: product.id,
       quantity,
-      roastId: options?.roastId ?? defaultRoast,
-      grindOptionId: options?.grindOptionId ?? defaultGrind,
+      roastId,
+      grindOptionId,
     };
 
     try {

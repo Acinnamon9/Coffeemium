@@ -13,10 +13,11 @@ import {
 import { useCart } from "@/hooks/useCart";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
-import { useState } from "react";
+import { useState, type MouseEvent } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useDemoProduct, type DemoProduct } from "@/lib/demo-products";
+import { fireConfetti } from "@/lib/confetti";
 
 type Product = DemoProduct;
 
@@ -36,14 +37,16 @@ export default function ProductCard({
     currency: "INR",
   }).format(displayedProduct.basePrice);
 
-  const handleAddToCart = async () => {
+  const handleAddToCart = async (event: MouseEvent<HTMLButtonElement>) => {
     if (cartLoading || isAdding) return;
 
+    const button = event.currentTarget;
     setIsAdding(true);
     const result = await addToCart(displayedProduct);
     setIsAdding(false);
 
     if (result.success) {
+      fireConfetti(button);
       toast.success(`${displayedProduct.name} was added to cart successfully.`, {
         duration: 2500,
       });

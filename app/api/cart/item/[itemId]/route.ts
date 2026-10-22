@@ -5,8 +5,8 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   updateItemSchema,
   CartItemWithPriceRelations,
-  calculateItemPrice,
 } from "@/lib/api/cartHelpers";
+import { calculateDealPrice, getActiveFeaturedDeal, getDealPercent } from "@/lib/deals";
 
 function errorJson(message: string, status = 500) {
   return NextResponse.json({ error: message }, { status });
@@ -49,15 +49,18 @@ export async function PATCH(
       include: { product: true, roast: true, grindOption: true },
     });
 
+    const deal = await getActiveFeaturedDeal();
+    const discountPercent = getDealPercent(deal, updated.productId);
     return NextResponse.json({
       item: {
         ...updated,
-        finalPrice: calculateItemPrice(updated as CartItemWithPriceRelations),
+        discountPercent,
+        finalPrice: calculateDealPrice(updated as CartItemWithPriceRelations, discountPercent),
       },
     });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("PATCH /api/cart/item error:", err);
-    return errorJson(err?.message ?? "Unexpected error", 500);
+    return errorJson(err instanceof Error ? err.message : "Unexpected error", 500);
   }
 }
 
@@ -82,8 +85,8 @@ export async function DELETE(
 
     await prisma.cartItem.delete({ where: { id: itemId } });
     return NextResponse.json({ message: "Item deleted" }, { status: 200 });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("DELETE /api/cart/item error:", err);
-    return errorJson(err?.message ?? "Unexpected error", 500);
+    return errorJson(err instanceof Error ? err.message : "Unexpected error", 500);
   }
 }

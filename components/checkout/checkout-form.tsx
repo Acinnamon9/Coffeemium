@@ -3,13 +3,20 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 export default function CheckoutForm() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<"COD" | "ONLINE">("COD");
+  const [subtotal, setSubtotal] = useState<number | null>(null);
+  useEffect(() => {
+    fetch("/api/cart", { cache: "no-store" }).then((res) => res.json()).then((data) => {
+      const items = data.cart?.items ?? [];
+      setSubtotal(items.reduce((sum: number, item: { finalPrice?: number; quantity: number }) => sum + (item.finalPrice ?? 0) * item.quantity, 0));
+    }).catch(() => setSubtotal(null));
+  }, []);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -51,6 +58,7 @@ export default function CheckoutForm() {
       className="space-y-6 bg-white p-6 rounded-lg shadow"
     >
       <h2 className="text-2xl font-bold">Checkout</h2>
+      {subtotal !== null && <div className="rounded-lg bg-[#f8f3ed] p-4 text-sm"><div className="flex justify-between"><span>Order subtotal</span><strong>{new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(subtotal)}</strong></div><p className="mt-1 text-gray-500">Limited-time discounts are verified when your order is placed.</p></div>}
 
       <div className="space-y-4">
         <div className="grid gap-2">

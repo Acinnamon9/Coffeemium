@@ -17,6 +17,16 @@ const AdminDashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-4xl mx-auto">
           <Card className="text-center">
             <CardHeader>
+              <CardTitle>Limited-Time Deal</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-gray-600 mb-4">Set a real promotion, eligible products, and expiry.</p>
+              <Link href="/admin/deals"><Button>Manage Deal</Button></Link>
+            </CardContent>
+          </Card>
+
+          <Card className="text-center">
+            <CardHeader>
               <CardTitle>Product Management</CardTitle>
             </CardHeader>
             <CardContent>

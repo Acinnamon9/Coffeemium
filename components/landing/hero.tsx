@@ -1,6 +1,6 @@
 "use client";
-import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { ListOrdered, ShoppingBag } from "lucide-react";
 
 export default function Hero() {
   return (
@@ -19,16 +19,29 @@ export default function Hero() {
         <p className="mx-auto mb-8 max-w-2xl text-lg text-white/90 sm:text-xl">
           Specialty beans, thoughtful roasts, and the right grind for your daily ritual.
         </p>
-        <div className="flex flex-col justify-center gap-3 sm:flex-row">
-          <Button asChild className="rounded-full bg-[#fff7ed] px-8 py-3 text-lg font-semibold text-[#3b281e] hover:bg-white">
-            <Link href="/shop">Shop All Coffees</Link>
-          </Button>
-          <Button asChild variant="outline" className="rounded-full border-white/60 bg-white/10 px-8 py-3 text-lg font-semibold text-white hover:bg-white/20 hover:text-white">
-            <Link href="#howitworks-heading">How it works</Link>
-          </Button>
-          <Button asChild variant="outline" className="rounded-full border-[#f4d9b8]/70 bg-[#f4d9b8]/10 px-8 py-3 text-lg font-semibold text-[#f4d9b8] hover:bg-[#f4d9b8]/20 hover:text-[#f4d9b8]">
-            <Link href="/demo">Customize this demo</Link>
-          </Button>
+        <div className="flex items-center justify-center gap-4">
+          <Link
+            href="/shop"
+            className="hero-icon-action hero-icon-action--light group"
+            aria-label="Shop All Coffees"
+            aria-describedby="hero-shop-tooltip"
+          >
+            <ShoppingBag className="hero-icon-action__icon hero-icon-action__icon--shop" aria-hidden="true" />
+            <span id="hero-shop-tooltip" role="tooltip" className="hero-icon-tooltip">
+              Shop All Coffees
+            </span>
+          </Link>
+          <Link
+            href="#howitworks-heading"
+            className="hero-icon-action hero-icon-action--outline group"
+            aria-label="How it works"
+            aria-describedby="hero-how-it-works-tooltip"
+          >
+            <ListOrdered className="hero-icon-action__icon hero-icon-action__icon--how-it-works" aria-hidden="true" />
+            <span id="hero-how-it-works-tooltip" role="tooltip" className="hero-icon-tooltip">
+              How it works
+            </span>
+          </Link>
         </div>
       </div>
     </section>

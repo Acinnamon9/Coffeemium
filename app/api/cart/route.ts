@@ -5,8 +5,8 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   addItemSchema,
   CartItemWithPriceRelations,
-  calculateItemPrice,
 } from "@/lib/api/cartHelpers";
+import { calculateDealPrice, getActiveFeaturedDeal, getDealPercent } from "@/lib/deals";
 
 function errorJson(message: string, status = 500) {
   return NextResponse.json({ error: message }, { status });
@@ -90,21 +90,23 @@ export async function POST(req: NextRequest) {
       });
     });
 
-    const itemsWithPrice = (result!.items || []).map((i: any) => ({
+    const deal = await getActiveFeaturedDeal();
+    const itemsWithPrice = (result?.items || []).map((i) => ({
       ...i,
-      finalPrice: calculateItemPrice(i as CartItemWithPriceRelations),
+      discountPercent: getDealPercent(deal, i.productId),
+      finalPrice: calculateDealPrice(i as CartItemWithPriceRelations, getDealPercent(deal, i.productId)),
     }));
 
     return NextResponse.json(
       { cart: { ...result!, items: itemsWithPrice } },
       { status: 200 }
     );
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("POST /api/cart error:", err);
     if (err instanceof Error && err.message === "Product not found") {
       return errorJson(err.message, 404);
     }
-    return errorJson(err?.message ?? "Unexpected error", 500);
+    return errorJson(err instanceof Error ? err.message : "Unexpected error", 500);
   }
 }
 
@@ -127,17 +129,19 @@ export async function GET() {
         { status: 200 }
       );
 
-    const itemsWithPrice = cart.items.map((i: any) => ({
+    const deal = await getActiveFeaturedDeal();
+    const itemsWithPrice = cart.items.map((i) => ({
       ...i,
-      finalPrice: calculateItemPrice(i as CartItemWithPriceRelations),
+      discountPercent: getDealPercent(deal, i.productId),
+      finalPrice: calculateDealPrice(i as CartItemWithPriceRelations, getDealPercent(deal, i.productId)),
     }));
 
     return NextResponse.json(
       { cart: { ...cart, items: itemsWithPrice } },
       { status: 200 }
     );
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("GET /api/cart error:", err);
-    return errorJson(err?.message ?? "Unexpected error", 500);
+    return errorJson(err instanceof Error ? err.message : "Unexpected error", 500);
   }
 }

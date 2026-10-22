@@ -81,6 +81,27 @@ model Product {
   orderItems    OrderItem[]
   stock         Int            @default(0)
   bundleItems   BundleItem[]
+  featuredDeals FeaturedDealProduct[]
+}
+
+model FeaturedDeal {
+  id          String   @id @default("primary")
+  title       String
+  description String   @default("")
+  discountPercent Int
+  startsAt    DateTime
+  endsAt      DateTime
+  isActive    Boolean  @default(false)
+  products    FeaturedDealProduct[]
+  updatedAt   DateTime @updatedAt
+}
+
+model FeaturedDealProduct {
+  dealId    String
+  productId String
+  deal      FeaturedDeal @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  @@id([dealId, productId])
 }
 
 model Bundle {

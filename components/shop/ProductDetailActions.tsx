@@ -3,7 +3,8 @@
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/hooks/useCart";
 import { toast } from "sonner";
-import { useState } from "react";
+import { useState, type MouseEvent } from "react";
+import { fireConfetti } from "@/lib/confetti";
 
 export default function ProductDetailActions({
   product,
@@ -13,12 +14,16 @@ export default function ProductDetailActions({
   const { addToCart, loading } = useCart();
   const [adding, setAdding] = useState(false);
 
-  async function handleAdd() {
+  async function handleAdd(event: MouseEvent<HTMLButtonElement>) {
     if (adding || loading) return;
+    const button = event.currentTarget;
     setAdding(true);
     const result = await addToCart(product);
     setAdding(false);
-    if (result.success) toast.success(`${product.name} added to your cart.`);
+    if (result.success) {
+      fireConfetti(button);
+      toast.success(`${product.name} added to your cart.`);
+    }
     else toast.error(result.error ?? "Please sign in before adding items.");
   }
 

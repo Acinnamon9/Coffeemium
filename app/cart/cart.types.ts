@@ -13,6 +13,7 @@ export interface CartItem {
   priceAtAddition?: number; // Optional, for database cart
   bundleId?: string;
   bundleName?: string;
+  discountPercent?: number;
 }
 
 export interface Roast {

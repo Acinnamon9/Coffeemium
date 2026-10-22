@@ -1,12 +1,10 @@
 // /app/api/products/route.ts
-import { prisma } from "@/lib/prisma";
+import { getStorefrontProducts } from "@/lib/products";
 import { NextResponse } from "next/server";
 
 export async function GET() {
   try {
-    const products = await prisma.product.findMany({
-      include: { productRoasts: { include: { roast: true } } },
-    });
+    const products = await getStorefrontProducts();
     return NextResponse.json({ products });
   } catch (err) {
     console.error("Products fetch failed", err);
