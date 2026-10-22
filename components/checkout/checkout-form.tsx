@@ -6,11 +6,7 @@ import { Label } from "@/components/ui/label";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-interface CheckoutFormProps {
-  userId: string;
-}
-
-export default function CheckoutForm({ userId }: CheckoutFormProps) {
+export default function CheckoutForm() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<"COD" | "ONLINE">("COD");
@@ -21,7 +17,6 @@ export default function CheckoutForm({ userId }: CheckoutFormProps) {
 
     const formData = new FormData(e.currentTarget);
     const data = {
-      userId,
       address: `${formData.get("address1")}, ${formData.get("address2") || ""}, ${formData.get("city")}, ${formData.get("pincode")}`,
       phone: formData.get("phone") as string,
       notes: (formData.get("notes") as string) || null,

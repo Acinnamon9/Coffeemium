@@ -53,7 +53,7 @@ export default async function CheckoutPage() {
       <Header />
       <main className="grow container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto">
-          <CheckoutForm userId={dbUser.id} />
+          <CheckoutForm />
         </div>
       </main>
       <Footer />
