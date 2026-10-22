@@ -85,9 +85,7 @@ export async function POST(req: NextRequest) {
       return tx.cart.findUnique({
         where: { userId },
         include: {
-          items: {
-            include: { product: true, roast: true, grindOption: true },
-          },
+          items: { include: { product: true, roast: true, grindOption: true, bundle: true } },
         },
       });
     });
@@ -119,9 +117,7 @@ export async function GET() {
     const cart = await prisma.cart.findUnique({
       where: { userId },
       include: {
-        items: {
-          include: { product: true, roast: true, grindOption: true },
-        },
+        items: { include: { product: true, roast: true, grindOption: true, bundle: true } },
       },
     });
 

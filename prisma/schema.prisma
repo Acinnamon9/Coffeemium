@@ -80,6 +80,30 @@ model Product {
   cartItems     CartItem[]
   orderItems    OrderItem[]
   stock         Int            @default(0)
+  bundleItems   BundleItem[]
+}
+
+model Bundle {
+  id          String       @id @default(uuid())
+  name        String
+  slug        String       @unique
+  description String
+  image       String
+  bundlePrice Float
+  items       BundleItem[]
+  cartItems   CartItem[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+model BundleItem {
+  id        String  @id @default(uuid())
+  bundleId  String
+  productId String
+  quantity  Int     @default(1)
+  bundle    Bundle  @relation(fields: [bundleId], references: [id], onDelete: Cascade)
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  @@unique([bundleId, productId])
 }
 
 model Roast {
@@ -143,13 +167,15 @@ model CartItem {
   grindOptionId String?
   quantity      Int
   priceAtAddition Float // Storing the price at the time of addition
+  bundleId      String?
 
   cart        Cart        @relation(fields: [cartId], references: [id], onDelete: Cascade)
   product     Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
   roast       Roast?      @relation(fields: [roastId], references: [id], onDelete: Cascade)
   grindOption GrindOption? @relation(fields: [grindOptionId], references: [id], onDelete: Cascade)
+  bundle      Bundle?      @relation(fields: [bundleId], references: [id], onDelete: SetNull)
 
-  @@unique([cartId, productId, roastId, grindOptionId])
+  @@unique([cartId, productId, roastId, grindOptionId, bundleId])
 }
 
 model Order {

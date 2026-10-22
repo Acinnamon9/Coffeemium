@@ -7,12 +7,16 @@ export type CartItemWithPriceRelations = Prisma.CartItemGetPayload<{
     product: true;
     roast: true;
     grindOption: true;
+    bundle: true;
   };
 }> & {
   finalPrice?: number;
 };
 
 export function calculateItemPrice(item: CartItemWithPriceRelations): number {
+  if (item.bundleId && item.priceAtAddition != null) {
+    return parseFloat(item.priceAtAddition.toFixed(2));
+  }
   const base = item.product?.basePrice ?? 0;
   const roastMultiplier = item.roast?.defaultMultiplier ?? 1;
   const grindExtra = item.grindOption?.extraCost ?? 0;
@@ -32,10 +36,3 @@ export const updateItemSchema = z.object({
   grindOptionId: z.string().uuid().optional().nullable(),
 });
 
-export const mergeItemSchema = z.object({
-  id: z.string(),
-  name: z.string().optional(),
-  basePrice: z.number().optional(),
-  quantity: z.number().int().positive().default(1),
-  image: z.string().optional().nullable(),
-});

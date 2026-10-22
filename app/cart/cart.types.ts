@@ -11,17 +11,8 @@ export interface CartItem {
   roastId?: string; // Optional, for database cart
   grindOptionId?: string; // Optional, for database cart
   priceAtAddition?: number; // Optional, for database cart
-}
-
-// Minimal type for items retrieved from localStorage
-export interface LocalCartItem {
-  id: string;
-  name: string;
-  image?: string | null;
-  basePrice: number;
-  quantity: number;
-  roastId?: string;
-  grindOptionId?: string;
+  bundleId?: string;
+  bundleName?: string;
 }
 
 export interface Roast {

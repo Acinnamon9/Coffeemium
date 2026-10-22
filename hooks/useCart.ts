@@ -1,9 +1,30 @@
 "use client";
-import { useState, useEffect, useCallback, useRef } from "react";
+import { createContext, createElement, useContext, useState, useEffect, useCallback, useRef } from "react";
 import { useUser } from "@clerk/nextjs";
 import { CartItem, Roast, GrindOption } from "@/app/cart/cart.types";
 
-export function useCart() {
+type CartApiItem = {
+  id: string;
+  productId: string;
+  quantity: number;
+  product?: {
+    basePrice?: number | null;
+    name?: string | null;
+    image?: string | null;
+  } | null;
+  roastId?: string | null;
+  grindOptionId?: string | null;
+  bundleId?: string | null;
+  bundle?: { name?: string | null } | null;
+};
+
+type CartApiResponse = {
+  cart?: {
+    items?: CartApiItem[];
+  } | null;
+};
+
+function useCartState() {
   const { isLoaded, isSignedIn } = useUser();
 
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
@@ -29,20 +50,23 @@ export function useCart() {
       const res = await fetch("/api/cart", { cache: "no-store" });
       if (!res.ok) throw new Error("Failed to fetch cart");
 
-      const data = await res.json();
+      const data = (await res.json()) as CartApiResponse;
       setCartItems(
-        (data.cart?.items || []).map((i: any) => ({
+        (data.cart?.items || []).map((i) => ({
           id: i.id,
+          productId: i.productId,
           quantity: i.quantity,
           basePrice: i.product?.basePrice ?? 0,
           name: i.product?.name ?? "Unknown",
           image: i.product?.image ?? null,
-          roastId: i.roastId ?? null,
-          grindOptionId: i.grindOptionId ?? null,
+          roastId: i.roastId ?? undefined,
+          grindOptionId: i.grindOptionId ?? undefined,
+          bundleId: i.bundleId ?? undefined,
+          bundleName: i.bundle?.name ?? undefined,
         }))
       );
-    } catch (err: any) {
-      setError(err.message ?? "Cart load failed");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Cart load failed");
     } finally {
       setInitialLoading(false);
     }
@@ -151,7 +175,8 @@ export function useCart() {
     const grind = grindOptions.find((g) => g.id === item.grindOptionId);
     const roastMult = roast?.defaultMultiplier ?? 1;
     const grindCost = grind?.extraCost ?? 0;
-    return t + (item.basePrice * roastMult + grindCost) * item.quantity;
+    const unitPrice = item.bundleId && item.priceAtAddition != null ? item.priceAtAddition : item.basePrice * roastMult + grindCost;
+    return t + unitPrice * item.quantity;
   }, 0);
 
   const formattedTotalPrice = new Intl.NumberFormat("en-IN", {
@@ -225,4 +250,20 @@ export function useCart() {
     undoRemoveItem,
     addToCart,
   };
+}
+
+type CartContextValue = ReturnType<typeof useCartState>;
+const CartContext = createContext<CartContextValue | null>(null);
+
+export function CartProvider({ children }: { children: React.ReactNode }) {
+  const cart = useCartState();
+  return createElement(CartContext.Provider, { value: cart }, children);
+}
+
+export function useCart() {
+  const cart = useContext(CartContext);
+  if (!cart) {
+    throw new Error("useCart must be used inside CartProvider");
+  }
+  return cart;
 }

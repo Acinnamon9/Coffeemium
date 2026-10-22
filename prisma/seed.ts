@@ -206,6 +206,36 @@ async function main() {
     console.log(`Created product: ${product.name}`);
   }
 
+  const productByName = new Map(createdProducts.map((product) => [product.name, product]));
+  const bundles = [
+    {
+      name: "The Morning Ritual Box",
+      slug: "morning-ritual-box",
+      description: "Three bright, balanced coffees for a better start to the day.",
+      image: "/images/Coffee-beans-hero-background.jpeg",
+      bundlePrice: 1199,
+      products: ["Ethiopian Yirgacheffe (250g)", "Kenyan AA (250g)", "Colombian Supremo (250g)"],
+    },
+    {
+      name: "The Home Barista Trio",
+      slug: "home-barista-trio",
+      description: "A versatile trio for espresso, pour over, and slow mornings.",
+      image: "/images/how-it-works/Brew.211Z.png",
+      bundlePrice: 1299,
+      products: ["House Espresso Blend (250g)", "Pour Over Grind (250g)", "French Press Grind (250g)"],
+    },
+  ];
+
+  for (const bundleData of bundles) {
+    const bundle = await prisma.bundle.upsert({
+      where: { slug: bundleData.slug },
+      update: { name: bundleData.name, description: bundleData.description, image: bundleData.image, bundlePrice: bundleData.bundlePrice },
+      create: { name: bundleData.name, slug: bundleData.slug, description: bundleData.description, image: bundleData.image, bundlePrice: bundleData.bundlePrice },
+    });
+    await prisma.bundleItem.deleteMany({ where: { bundleId: bundle.id } });
+    await prisma.bundleItem.createMany({ data: bundleData.products.map((name) => ({ bundleId: bundle.id, productId: productByName.get(name)!.id, quantity: 1 })) });
+  }
+
   const roastOptions = [
     {
       name: "Light",

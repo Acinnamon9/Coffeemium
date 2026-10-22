@@ -42,7 +42,9 @@ export const CartItemDisplay = ({
 
   const roastMultiplier = selectedRoast?.defaultMultiplier ?? 1.0;
   const grindExtraCost = selectedGrind?.extraCost ?? 0;
-  const adjustedPrice = item.basePrice * roastMultiplier + grindExtraCost;
+  const adjustedPrice = item.bundleId && item.priceAtAddition != null
+    ? item.priceAtAddition
+    : item.basePrice * roastMultiplier + grindExtraCost;
   const totalPrice = adjustedPrice * item.quantity;
   const price = `₹${totalPrice.toFixed(2)}`;
 
@@ -66,6 +68,8 @@ export const CartItemDisplay = ({
             alt={item.name}
             width={64}
             height={64}
+            sizes="64px"
+            quality={70}
             className="rounded-md object-cover"
           />
         ) : (
@@ -86,6 +90,7 @@ export const CartItemDisplay = ({
           <p className="text-sm text-gray-500">
             ₹{item.basePrice.toFixed(2)} each
           </p>
+          {item.bundleName && <span className="mt-1 w-fit rounded-full bg-[#f2e8dc] px-2 py-1 text-xs font-semibold text-[#8b5e3c]">Part of {item.bundleName}</span>}
 
           {/* Roast Dropdown */}
           <Select
