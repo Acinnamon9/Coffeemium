@@ -1,4 +1,4 @@
-import { PrismaClient } from "../app/generated/prisma/client"; // Adjust import path to where Prisma Client is actually generated
+import { PrismaClient, type Roast } from "../prisma/generated/client/client";
 import { randomUUID } from "crypto";
 
 const prisma = new PrismaClient();
@@ -258,7 +258,7 @@ async function main() {
   ];
 
   // Create canonical roast types once
-  const createdRoasts: any[] = [];
+  const createdRoasts: Roast[] = [];
   for (const r of roastOptions) {
     const roast = await prisma.roast.create({
       data: {

@@ -4,6 +4,19 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* A gentle refractive pass adds a glass-like bend to the content behind the sticky nav. */
+.landing-header {
+  -webkit-backdrop-filter: blur(12px) saturate(1.15);
+  backdrop-filter: blur(12px) saturate(1.15);
+}
+
+@supports (backdrop-filter: url(#nav-light-bend)) {
+  .landing-header {
+    -webkit-backdrop-filter: url(#nav-light-bend) blur(12px) saturate(1.15);
+    backdrop-filter: url(#nav-light-bend) blur(12px) saturate(1.15);
+  }
+}
+
 .nav-link {
   @apply text-sm font-medium text-muted-foreground hover:text-primary transition-colors;
 }

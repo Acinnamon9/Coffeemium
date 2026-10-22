@@ -44,7 +44,14 @@ export default function Header() {
   const closeMobileMenu = () => setMobileMenuOpen(false);
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-[#eadfd3] bg-[#fbf7f2]/95 shadow-[0_4px_18px_rgb(59_40_30/6%)] backdrop-blur supports-backdrop-filter:bg-[#fbf7f2]/85">
+    <>
+      <svg aria-hidden="true" className="pointer-events-none absolute h-0 w-0" xmlns="http://www.w3.org/2000/svg">
+        <filter id="nav-light-bend" x="-10%" y="-20%" width="120%" height="140%" colorInterpolationFilters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="0.012 0.08" numOctaves="1" seed="7" result="glass-waves" />
+          <feDisplacementMap in="SourceGraphic" in2="glass-waves" scale="5" xChannelSelector="R" yChannelSelector="G" />
+        </filter>
+      </svg>
+      <header className="landing-header sticky top-0 z-40 w-full border-b border-[#eadfd3] bg-[#fbf7f2]/95 shadow-[0_4px_18px_rgb(59_40_30/6%)] backdrop-blur supports-backdrop-filter:bg-[#fbf7f2]/85">
       <div className="mx-auto flex min-h-[4.5rem] max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <div className="flex items-center">
           <Link href="/" className="flex items-center gap-3" onClick={closeMobileMenu}>
@@ -158,6 +165,7 @@ export default function Header() {
           </div>
         </nav>
       )}
-    </header>
+      </header>
+    </>
   );
 }

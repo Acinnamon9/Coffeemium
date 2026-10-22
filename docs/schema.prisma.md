@@ -9,11 +9,11 @@ Let's break down these magnificent creations, shall we?
 ```prisma
 generator client {
   provider = "prisma-client"
-  output   = "../app/generated/prisma"
+  output   = "../prisma/generated/client"
 }
 ```
 
-Ah, the `generator client`. This little marvel is responsible for conjuring the Prisma Client itself. Think of it as our personal data-whisperer, generating all the juicy TypeScript magic that allows our application to chat with the database in a language we both understand. It politely places its output in `../app/generated/prisma`, because organization is next to godliness, or at least next to debuggable code.
+Ah, the `generator client`. This little marvel is responsible for conjuring the Prisma Client itself. Think of it as our personal data-whisperer, generating all the juicy TypeScript magic that allows our application to chat with the database in a language we both understand. It politely places its output in `../prisma/generated/client`, because organization is next to godliness, or at least next to debuggable code.
 
 ## `datasource db`
 

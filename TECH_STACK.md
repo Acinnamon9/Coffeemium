@@ -1,39 +1,29 @@
 # Tech Stack
 
-## Core Framework & Language
+## Application
 
-- **Framework**: [Next.js 16](https://nextjs.org/) (App Router)
-- **Language**: [TypeScript](https://www.typescriptlang.org/)
-- **Library**: [React 19](https://react.dev/)
+- Next.js 16 App Router
+- React 19 and TypeScript
+- Tailwind CSS 4
+- Radix UI primitives with local components in `components/ui`
+- Framer Motion, Lucide React, and Sonner
 
-## Styling & UI Components
+## Data and server state
 
-- **Styling**: [Tailwind CSS 4](https://tailwindcss.com/)
-- **Component Library**: [shadcn/ui](https://ui.shadcn.com/) (built on Radix UI primitives)
-- **Animations**: [Framer Motion](https://www.framer.com/motion/)
-- **Icons**: [Lucide React](https://lucide.dev/)
-- **Theming**: [next-themes](https://github.com/pacocoursey/next-themes) (Dark mode support)
-- **Notifications**: [Sonner](https://sonner.emilkowal.ski/)
-
-## Backend & Database
-
-- **Database**: PostgreSQL
-- **Serverless Provider**: [Neon](https://neon.tech/) (`@neondatabase/serverless`)
-- **ORM**: [Prisma](https://www.prisma.io/) (`@prisma/client`, `@prisma/adapter-pg`)
-  - _Includes Prisma Accelerate for connection pooling/caching_
+- PostgreSQL, configured for Neon
+- Prisma 6 with Prisma Accelerate
+- Zod for request validation
+- SWR for client side data fetching
 
 ## Authentication
 
-- **Primary**: [Clerk](https://clerk.com/) (`@clerk/nextjs`)
-- **Secondary/Legacy**: [NextAuth.js](https://next-auth.js.org/) (`next-auth`, `@auth/prisma-adapter`)
-  - _Note: Check if NextAuth is still actively used since Clerk is present._
+- Clerk is the authentication provider used by the storefront and protected server routes.
+- A NextAuth Google route remains at `/api/auth/[...nextauth]` with Prisma adapter support. It is separate from the Clerk flow and is not used by the current login and registration pages; treat it as legacy until intentionally consolidated.
 
-## Data & State Management
+## Development
 
-- **Validation**: [Zod](https://zod.dev/)
-- **Data Fetching**: [SWR](https://swr.vercel.app/)
+- npm
+- ESLint with the Next.js core web vitals and TypeScript configurations
+- Prisma CLI and `tsx` for database scripts
 
-## Tools & DevOps
-
-- **Linting**: ESLint + Prettier
-- **Package Manager**: npm
+See `package.json` for the authoritative dependency list and scripts.

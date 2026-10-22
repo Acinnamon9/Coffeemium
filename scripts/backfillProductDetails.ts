@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 dotenv.config();
 
-import { PrismaClient } from "../app/generated/prisma/client";
+import { PrismaClient } from "../prisma/generated/client/client";
 import { productDetails } from "../prisma/product-details";
 import fs from "fs";
 

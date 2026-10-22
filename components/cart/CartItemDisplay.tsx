@@ -2,7 +2,7 @@
 import Image from "next/image";
 import { motion } from "framer-motion";
 
-import { CartItem, Roast, GrindOption } from "../../app/cart/cart.types";
+import { CartItem, Roast, GrindOption } from "@/lib/types/cart";
 import { Coffee } from "lucide-react";
 import {
   Select,

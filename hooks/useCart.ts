@@ -1,7 +1,7 @@
 "use client";
 import { createContext, createElement, useContext, useState, useEffect, useCallback, useRef } from "react";
 import { useUser } from "@clerk/nextjs";
-import { CartItem, Roast, GrindOption } from "@/app/cart/cart.types";
+import { CartItem, Roast, GrindOption } from "@/lib/types/cart";
 import {
   clearCartFromLocalStorage,
   getCartFromLocalStorage,

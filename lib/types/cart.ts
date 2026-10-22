@@ -1,4 +1,4 @@
-// app/cart/cart.types.ts
+// Shared cart types used by the cart UI, hook, and browser storage.
 
 // Define the structure for a cart item, matching what's expected from API and localStorage
 export interface CartItem {

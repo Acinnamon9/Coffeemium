@@ -245,7 +245,7 @@ await addToCart(product);
 ## 📚 Related Files
 
 - **Hook:** `hooks/useCart.ts`
-- **Types:** `app/cart/cart.types.ts`
+- **Types:** `lib/types/cart.ts`
 - **Storage:** `lib/localStorageCart.ts`
 - **API:** `app/api/cart/route.ts`
 - **Display:** `components/cart/CartItemDisplay.tsx`

@@ -31,6 +31,16 @@ Demo edits are stored in the visitor's browser and do not change the shared data
 - Clerk authentication
 - SWR for client-side data fetching
 
+## Code organization
+
+- `app/` contains App Router pages, route handlers, and server actions.
+- `components/` contains UI grouped by storefront area, with shared primitives in `components/ui/`.
+- `hooks/` contains client state hooks; `lib/` contains data helpers, integrations, and shared types.
+- `prisma/` contains the schema, migrations, seed data, and generated Prisma Client. Generated client files are recreated by `prisma generate` and are ignored by Git.
+- `scripts/` contains one off maintenance and database scripts; `docs/` contains implementation notes and reference material.
+
+Clerk is the active sign-in flow. A separate NextAuth route remains for legacy Google OAuth; the two flows are not integrated.
+
 ## Local setup
 
 ```bash

@@ -14,7 +14,7 @@ const Testimonials = () => {
           <Card>
             <CardContent className="p-6">
               <p className="text-gray-700 italic">
-                "This coffee changed my morning routine. Absolutely exquisite!"
+                &ldquo;This coffee changed my morning routine. Absolutely exquisite!&rdquo;
               </p>
               <p className="mt-4 font-semibold text-gray-800">
                 - Coffee Lover 1
@@ -24,8 +24,8 @@ const Testimonials = () => {
           <Card>
             <CardContent className="p-6">
               <p className="text-gray-700 italic">
-                "I've never tasted such fresh coffee. The aroma alone is worth
-                it."
+                &ldquo;I&apos;ve never tasted such fresh coffee. The aroma alone is worth
+                it.&rdquo;
               </p>
               <p className="mt-4 font-semibold text-gray-800">
                 - Discerning Palate
@@ -35,7 +35,7 @@ const Testimonials = () => {
           <Card>
             <CardContent className="p-6">
               <p className="text-gray-700 italic">
-                "Fast delivery and incredible quality. Highly recommend!"
+                &ldquo;Fast delivery and incredible quality. Highly recommend!&rdquo;
               </p>
               <p className="mt-4 font-semibold text-gray-800">
                 - Happy Customer
