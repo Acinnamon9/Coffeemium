@@ -23,7 +23,7 @@ export default function CartHeader() {
               width={48}
               height={48}
               sizes="48px"
-              quality={70}
+              quality={75}
               className="object-contain"
             />
             <Coffee className="w-6 h-6 text-[#6c47ff] hidden group-hover:block animate-pulse" />

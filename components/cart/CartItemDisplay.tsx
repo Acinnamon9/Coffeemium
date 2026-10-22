@@ -75,7 +75,7 @@ export const CartItemDisplay = ({
             width={64}
             height={64}
             sizes="64px"
-            quality={70}
+            quality={75}
             className="rounded-md object-cover"
           />
         ) : (
