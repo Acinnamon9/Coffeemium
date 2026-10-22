@@ -9,6 +9,7 @@ const isPublicRoute = createRouteMatcher([
   "/cart(.*)",
   "/login(.*)",
   "/register(.*)",
+  "/api/options(.*)",
   "/api/products(.*)",
 ]);
 const isIgnoredRoute = createRouteMatcher(["/api/webhook(.*)"]);
