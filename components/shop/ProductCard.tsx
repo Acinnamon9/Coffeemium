@@ -15,14 +15,10 @@ import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
+import { useDemoProduct, type DemoProduct } from "@/lib/demo-products";
 
-type Product = {
-  id: string;
-  name: string;
-  description?: string | null;
-  image?: string;
-  basePrice: number;
-};
+type Product = DemoProduct;
 
 export default function ProductCard({
   product,
@@ -31,23 +27,24 @@ export default function ProductCard({
   product: Product;
   badge?: string;
 }) {
+  const displayedProduct = useDemoProduct(product);
   const { addToCart, loading: cartLoading } = useCart();
   const [isAdding, setIsAdding] = useState(false);
 
   const price = new Intl.NumberFormat("en-IN", {
     style: "currency",
     currency: "INR",
-  }).format(product.basePrice);
+  }).format(displayedProduct.basePrice);
 
   const handleAddToCart = async () => {
     if (cartLoading || isAdding) return;
 
     setIsAdding(true);
-    const result = await addToCart(product);
+    const result = await addToCart(displayedProduct);
     setIsAdding(false);
 
     if (result.success) {
-      toast.success(`${product.name} was added to cart successfully.`, {
+      toast.success(`${displayedProduct.name} was added to cart successfully.`, {
         duration: 2500,
       });
     } else {
@@ -61,26 +58,26 @@ export default function ProductCard({
     <motion.div
       whileHover={{ scale: 1.03, y: -3 }}
       transition={{ duration: 0.18 }}
-      className="cursor-pointer"
+      className="group"
     >
       <Card className="flex flex-col shadow-sm">
-        <CardHeader>
-          <CardTitle className="truncate">{product.name}</CardTitle>
-          {product.description && (
+        <CardHeader className="pb-3">
+          <CardTitle className="truncate text-lg"><Link href={`/products/${displayedProduct.id}`} className="hover:text-[#8b5e3c]">{displayedProduct.name}</Link></CardTitle>
+          {displayedProduct.description && (
             <CardDescription className="truncate">
-              {product.description}
+              {displayedProduct.description}
             </CardDescription>
           )}
         </CardHeader>
 
         <CardContent className="grow">
-          {product.image ? (
+          {displayedProduct.image ? (
             <Image
-              src={product.image}
-              alt={product.name}
+              src={displayedProduct.image}
+              alt={displayedProduct.name}
               width={100}
               height={100}
-              className="w-full aspect-square object-contain mb-4 rounded-md"
+              className="mb-4 aspect-square w-full rounded-md object-cover transition-transform duration-300 group-hover:scale-[1.02]"
             />
           ) : (
             <div className="w-full aspect-square bg-gray-100 mb-4 rounded-md" />
@@ -97,7 +94,7 @@ export default function ProductCard({
         </CardContent>
 
         <CardFooter className="flex flex-col gap-2">
-          <Button className="w-full">View Details</Button>
+          <Button asChild className="w-full bg-[#3b281e] hover:bg-[#563b2b]"><Link href={`/products/${displayedProduct.id}`}>View Details</Link></Button>
 
           <Button
             variant="outline"

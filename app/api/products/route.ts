@@ -4,7 +4,9 @@ import { NextResponse } from "next/server";
 
 export async function GET() {
   try {
-    const products = await prisma.product.findMany();
+    const products = await prisma.product.findMany({
+      include: { productRoasts: { include: { roast: true } } },
+    });
     return NextResponse.json({ products });
   } catch (err) {
     console.error("Products fetch failed", err);

@@ -18,6 +18,7 @@ import {
   UserButton,
   useUser,
 } from "@clerk/nextjs";
+import { ShoppingBag } from "lucide-react";
 import { getCartItemCount as getLocalStorageCartItemCount } from "@/lib/localStorageCart"; // Import for localStorage count
 
 // Function to fetch cart count from the database API
@@ -71,13 +72,10 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
-      <div className="container flex h-14 items-center justify-between relative">
-        <div className="flex items-center gap-8">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center gap-6">
           <Link href="/" className="flex items-center gap-3">
-            <div
-              className="relative h-18 w-20
-             overflow-hidden"
-            >
+            <div className="relative h-14 w-16 overflow-hidden sm:h-16 sm:w-20">
               <Image
                 src="/images/Logo/Coffeemium.png"
                 alt="Coffeemium"
@@ -94,7 +92,7 @@ export default function Header() {
                 <NavigationMenuLink href="/" asChild>
                   <Link
                     href="/"
-                    className={`px-2 py-1 rounded ${routeActive("/") ? "font-semibold text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+                    className={`rounded-full px-3 py-2 text-sm transition-colors ${routeActive("/") ? "bg-[#f2e8dc] font-semibold text-[#3b281e]" : "text-muted-foreground hover:bg-[#f7efe7] hover:text-foreground"}`}
                     aria-current={routeActive("/") ? "page" : undefined}
                   >
                     Home
@@ -106,7 +104,8 @@ export default function Header() {
                 <NavigationMenuLink href="/shop" asChild>
                   <Link
                     href="/shop"
-                    className={`px-2 py-1 rounded ${routeActive("/shop") ? "font-semibold text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+                    className={`rounded-full px-3 py-2 text-sm transition-colors ${routeActive("/shop") ? "bg-[#f2e8dc] font-semibold text-[#3b281e]" : "text-muted-foreground hover:bg-[#f7efe7] hover:text-foreground"}`}
+                    aria-current={routeActive("/shop") ? "page" : undefined}
                   >
                     Shop
                   </Link>
@@ -116,37 +115,31 @@ export default function Header() {
           </NavigationMenu>
         </div>
 
-        <div className="flex items-center gap-4 mr-4">
+        <div className="mr-0 flex items-center gap-2 sm:gap-4">
           {/* Cart link with count */}
           <Link
             href="/cart"
-            className={`flex items-center gap-2 px-3 py-1 rounded hover:bg-muted/50 ${routeActive("/cart") ? "font-semibold" : ""}`}
+            className={`relative flex items-center gap-2 rounded-full px-3 py-2 text-sm transition-colors hover:bg-[#f7efe7] ${routeActive("/cart") ? "font-semibold text-[#3b281e]" : ""}`}
             aria-label="Cart"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="currentColor"
-              className="h-5 w-5"
-            >
-              <path d="M3 3h2l.4 2M7 13h10l4-8H5.4" strokeWidth="0" />
-              <path d="M7 13l-1.2 6.4A1 1 0 0 0 6.8 21H19" strokeWidth="0" />
-              <circle cx="10" cy="20" r="1" />
-              <circle cx="18" cy="20" r="1" />
-            </svg>
+            <ShoppingBag className="h-4 w-4" aria-hidden="true" />
             <span className="hidden sm:inline">Cart</span>
             {/* Cart count badge */}
             {cartItemCount > 0 && (
               <span className="ml-1 px-2 py-0.5 bg-red-500 text-white text-xs rounded-full">
-                {cartItemCount}
+                {cartItemCount > 99 ? "99+" : cartItemCount}
               </span>
             )}
           </Link>
           {/* Authentication buttons */}
           <SignedOut>
-            <SignInButton />
+            <SignInButton>
+              <button className="hidden rounded-full px-3 py-2 text-sm font-medium text-muted-foreground transition hover:bg-[#f7efe7] hover:text-foreground sm:inline-flex">
+                Sign in
+              </button>
+            </SignInButton>
             <SignUpButton>
-              <button className="bg-[#6c47ff] text-white rounded-full font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 cursor-pointer">
+              <button className="h-10 cursor-pointer rounded-full bg-[#3b281e] px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-[#563b2b] sm:h-11 sm:px-5">
                 Sign Up
               </button>
             </SignUpButton>

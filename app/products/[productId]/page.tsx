@@ -1,84 +1,49 @@
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { notFound } from "next/navigation";
 import Image from "next/image";
+import Link from "next/link";
+import { prisma } from "@/lib/prisma";
+import Header from "@/components/landing/header";
+import Footer from "@/components/landing/footer";
+import ProductDetailActions from "@/components/shop/ProductDetailActions";
 
-export async function generateStaticParams() {
-  // For a real application, you would fetch your product IDs from a database
-  // For now, let's mock a few product IDs
-  return [
-    { productId: "ethiopian-yirgacheffe-coffee" },
-    { productId: "colombian-supremo-coffee" },
-    { productId: "brazilian-santos-coffee" },
-  ];
-}
-
-export default function ProductDetailPage({
+export default async function ProductDetailPage({
   params,
 }: {
-  params: { productId: string };
+  params: Promise<{ productId: string }>;
 }) {
-  const { productId } = params;
+  const { productId } = await params;
+  const product = await prisma.product.findUnique({
+    where: { id: productId },
+    include: { detail: true, productRoasts: { include: { roast: true } } },
+  });
 
-  // In a real application, you would fetch product details based on the productId
-  // For now, we'll use mock data
-  const mockProduct = {
-    name: productId
-      ? productId
-          .replace(/-/g, " ")
-          .split(" ")
-          .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-          .join(" ")
-      : "Unknown Product",
-    description: productId
-      ? `This is a detailed description for ${productId.replace(
-          /-/g,
-          " "
-        )}. It's a fantastic product with amazing features and benefits.`
-      : "This is a detailed description for an unknown product.",
-    // use a numeric price for cart calculations
-    price: 15.99,
-    imageUrl: "/placeholder.jpg", // You can add a placeholder image in your public folder
-  };
+  if (!product) notFound();
+
+  const price = new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+  }).format(product.basePrice);
 
   return (
-    <section className="container mx-auto py-16 px-4">
-      <Card className="flex flex-col md:flex-row">
-        <div className="md:w-1/2 p-4">
-          <Image
-            src={mockProduct.imageUrl}
-            alt={mockProduct.name}
-            width={500}
-            height={500}
-            className="rounded-md object-cover"
-          />
-        </div>
-        <div className="md:w-1/2 p-4 flex flex-col justify-center">
-          <CardHeader>
-            <CardTitle className="text-amber-800 text-4xl mb-2">
-              {mockProduct.name}
-            </CardTitle>
-            <CardDescription className="text-lg">
-              {mockProduct.description}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="grow">
-            <p className="text-2xl font-semibold text-gray-900 mb-4">
-              ${mockProduct.price.toFixed(2)}
-            </p>
-            <div className="flex space-x-2">
-              <Button className="bg-white border border-gray-200 text-gray-900 text-lg px-6 py-3">
-                Buy Now
-              </Button>
-            </div>
-          </CardContent>
-        </div>
-      </Card>
-    </section>
+    <div className="min-h-screen bg-[#fbf8f3]">
+      <Header />
+      <main className="container mx-auto px-4 py-12 sm:py-20">
+        <Link href="/shop" className="mb-8 inline-block text-sm font-medium text-[#8b5e3c] hover:underline">← Back to shop</Link>
+        <section className="grid overflow-hidden rounded-3xl border border-[#eadfd3] bg-white shadow-sm md:grid-cols-2">
+          <div className="bg-[#f4ede5] p-6 sm:p-10">
+            <Image src={product.image} alt={product.name} width={700} height={700} className="aspect-square w-full rounded-2xl object-cover" priority />
+          </div>
+          <div className="flex flex-col justify-center p-6 sm:p-10">
+            <p className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-[#9a6b46]">Freshly roasted</p>
+            <h1 className="text-4xl font-bold tracking-tight text-[#3b281e] sm:text-5xl">{product.name}</h1>
+            <p className="mt-5 text-lg leading-8 text-gray-600">{product.detail?.fullDescription || product.description}</p>
+            <p className="mt-8 text-3xl font-semibold text-[#3b281e]">{price}</p>
+            {product.productRoasts.length > 0 && <div className="mt-6"><p className="mb-2 text-sm font-semibold">Available roasts</p><div className="flex flex-wrap gap-2">{product.productRoasts.map(({ roast }) => <span key={roast.id} className="rounded-full bg-[#f2e8dc] px-3 py-1 text-sm text-[#6b4630]">{roast.name}</span>)}</div></div>}
+            <ProductDetailActions product={{ id: product.id, name: product.name, basePrice: product.basePrice, image: product.image }} />
+          </div>
+        </section>
+      </main>
+      <Footer />
+    </div>
   );
 }

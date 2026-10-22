@@ -1,63 +1,9 @@
-"use client";
-
-import React from "react";
+import { SignIn } from "@clerk/nextjs";
 import Header from "@/components/landing/header";
 import Footer from "@/components/landing/footer";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import Link from "next/link";
 
-const LoginPage = () => {
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log("Login attempt...");
-    // TODO: Integrate with NextAuth or a custom authentication logic
-    alert("Login functionality not yet implemented.");
-  };
-
+export default function LoginPage() {
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      <Header />
-      <main className="grow container mx-auto px-4 py-8 flex flex-col items-center justify-center">
-        <div className="w-full max-w-md bg-white p-8 rounded-lg shadow-md">
-          <h1 className="text-3xl font-bold text-gray-800 mb-6 text-center">
-            Sign In
-          </h1>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="your@example.com"
-                required
-              />
-            </div>
-            <div>
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="********"
-                required
-              />
-            </div>
-            <Button type="submit" className="w-full">
-              Sign In
-            </Button>
-          </form>
-          <p className="mt-6 text-center text-gray-600">
-            Don't have an account?{" "}
-            <Link href="/register" className="text-indigo-600 hover:underline">
-              Register here
-            </Link>
-          </p>
-        </div>
-      </main>
-      <Footer />
-    </div>
+    <div className="flex min-h-screen flex-col bg-[#fbf8f3]"><Header /><main className="flex grow items-center justify-center px-4 py-16"><div className="w-full max-w-md"><div className="mb-8 text-center"><p className="mb-2 text-sm font-semibold uppercase tracking-[0.2em] text-[#9a6b46]">Welcome back</p><h1 className="text-4xl font-bold text-[#3b281e]">Sign in to Coffeemium</h1><p className="mt-3 text-gray-500">Save your coffee preferences and keep your cart synced.</p></div><SignIn routing="path" path="/login" signUpUrl="/register" /></div></main><Footer /></div>
   );
-};
-
-export default LoginPage;
+}
