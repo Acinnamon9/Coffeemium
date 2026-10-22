@@ -191,7 +191,17 @@ async function main() {
 
   const createdProducts = [];
   for (const productData of productsData) {
-    const product = await prisma.product.create({ data: productData });
+    const normalized = `${productData.name} ${productData.description}`.toLowerCase();
+    const category = normalized.includes("instant")
+      ? "instant"
+      : normalized.includes("grind") || normalized.includes("moka pot") || normalized.includes("french press") || normalized.includes("aeropress") || normalized.includes("pour over") || normalized.includes("espresso machine")
+        ? "grinds"
+        : normalized.includes("flavored") || normalized.includes("infused") || normalized.includes("mocha") || normalized.includes("vanilla") || normalized.includes("hazelnut") || normalized.includes("cinnamon") || normalized.includes("caramel") || normalized.includes("irish cream") || normalized.includes("coconut")
+          ? "flavored"
+          : normalized.includes("blend")
+            ? "blends"
+            : "single-origin";
+    const product = await prisma.product.create({ data: { ...productData, category } });
     createdProducts.push(product);
     console.log(`Created product: ${product.name}`);
   }

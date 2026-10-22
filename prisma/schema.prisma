@@ -72,6 +72,7 @@ model Product {
   basePrice     Float
   description   String
   image         String
+  category      String         @default("single-origin")
   // relation to the join table
   productRoasts ProductRoast[]
   // New: One-to-one relation to ProductDetail

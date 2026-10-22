@@ -77,6 +77,8 @@ export default function ProductCard({
               alt={displayedProduct.name}
               width={100}
               height={100}
+              sizes="(max-width: 768px) 100vw, (max-width: 1280px) 33vw, 320px"
+              quality={72}
               className="mb-4 aspect-square w-full rounded-md object-cover transition-transform duration-300 group-hover:scale-[1.02]"
             />
           ) : (
@@ -91,6 +93,7 @@ export default function ProductCard({
               </Badge>
             )}
           </div>
+          {displayedProduct.category && <p className="mt-2 text-xs font-medium uppercase tracking-wider text-[#9a6b46]">{displayedProduct.category.replace("-", " ")}</p>}
         </CardContent>
 
         <CardFooter className="flex flex-col gap-2">

@@ -13,12 +13,21 @@ type Product = DemoProduct & {
   productRoasts?: { roast?: { name: string } | null }[];
 };
 
+const categoryLabels: Record<string, string> = {
+  "single-origin": "Single origin",
+  blends: "Blends",
+  instant: "Instant",
+  flavored: "Flavored",
+  grinds: "Grinds",
+};
+
 export default function ProductsClient() {
   const { data, isLoading } = useSWR("/api/products", fetcher);
 
   const products = useDemoProducts((data?.products ?? []) as Product[]);
 
   const [query, setQuery] = useState("");
+  const [category, setCategory] = useState("all");
   const [roast, setRoast] = useState("all");
   const [sort, setSort] = useState("featured");
   const debouncedQuery = useDebounce(query, 300); // smoother search
@@ -27,18 +36,24 @@ export default function ProductsClient() {
     const q = debouncedQuery.trim().toLowerCase();
     const result = products.filter((p) => {
       const matchesQuery = !q || `${p.name} ${p.description || ""}`.toLowerCase().includes(q);
+      const matchesCategory = category === "all" || p.category === category;
       const matchesRoast = roast === "all" || p.productRoasts?.some((r) => r.roast?.name === roast);
-      return matchesQuery && matchesRoast;
+      return matchesQuery && matchesCategory && matchesRoast;
     });
     return [...result].sort((a, b) => sort === "price-low" ? a.basePrice - b.basePrice : sort === "price-high" ? b.basePrice - a.basePrice : 0);
-  }, [products, debouncedQuery, roast, sort]);
+  }, [products, debouncedQuery, category, roast, sort]);
 
   const roastOptions = Array.from(new Set(products.flatMap((p) => p.productRoasts?.map((r) => r.roast?.name).filter((name): name is string => Boolean(name)) ?? [])));
+  const categoryOptions = Array.from(new Set(products.map((p) => p.category).filter((value): value is string => Boolean(value))));
 
   return (
     <div>
       <div className="mb-4 grid gap-3 sm:grid-cols-[1fr_auto_auto]">
         <SearchBar initialQuery="" onSearch={setQuery} />
+        <select aria-label="Filter by category" value={category} onChange={(e) => setCategory(e.target.value)} className="h-10 rounded-md border border-gray-200 bg-white px-3 text-sm">
+          <option value="all">All categories</option>
+          {categoryOptions.map((option) => <option key={option} value={option}>{categoryLabels[option] ?? option}</option>)}
+        </select>
         <select aria-label="Filter by roast" value={roast} onChange={(e) => setRoast(e.target.value)} className="h-10 rounded-md border border-gray-200 bg-white px-3 text-sm">
           <option value="all">All roasts</option>
           {roastOptions.map((option) => <option key={option} value={option}>{option}</option>)}
