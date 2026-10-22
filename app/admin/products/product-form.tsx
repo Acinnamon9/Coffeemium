@@ -15,6 +15,16 @@ interface ProductFormProps {
     basePrice: number;
     image: string;
     stock: number;
+    detail?: {
+      origin: string | null;
+      tastingNotes: string[];
+      body: number | null;
+      acidity: number | null;
+      sweetness: number | null;
+      bitterness: number | null;
+      galleryImages: string[];
+      roastProfiles: unknown;
+    } | null;
   };
   onSuccess?: () => void;
 }
@@ -99,6 +109,35 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
         <Label htmlFor="image">Image URL</Label>
         <Input id="image" name="image" defaultValue={product?.image} required />
       </div>
+
+      <fieldset className="space-y-3 rounded-lg border p-4">
+        <legend className="px-1 font-medium">Coffee details</legend>
+        <div className="grid gap-2">
+          <Label htmlFor="origin">Origin</Label>
+          <Input id="origin" name="origin" defaultValue={product?.detail?.origin ?? ""} placeholder="e.g. Colombia" />
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor="tastingNotes">Tasting notes (comma separated)</Label>
+          <Input id="tastingNotes" name="tastingNotes" defaultValue={product?.detail?.tastingNotes.join(", ") ?? ""} placeholder="Caramel, cherry, walnut" />
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          {(["body", "acidity", "sweetness", "bitterness"] as const).map((field) => (
+            <div className="grid gap-2" key={field}>
+              <Label htmlFor={field}>{field[0].toUpperCase() + field.slice(1)} (1–5)</Label>
+              <Input id={field} name={field} type="number" min="1" max="5" step="1" defaultValue={product?.detail?.[field] ?? ""} />
+            </div>
+          ))}
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor="galleryImages">Gallery image paths (one per line)</Label>
+          <textarea id="galleryImages" name="galleryImages" rows={4} defaultValue={product?.detail?.galleryImages.join("\n") ?? ""} placeholder="/images/product-gallery/coffee-bag-still-life.png" className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
+          <p className="text-xs text-gray-500">Use local image paths or public image URLs. Empty uses the shared coffee gallery.</p>
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor="roastProfiles">Roast presentation (optional JSON)</Label>
+          <textarea id="roastProfiles" name="roastProfiles" rows={5} defaultValue={product?.detail?.roastProfiles ? JSON.stringify(product.detail.roastProfiles, null, 2) : ""} placeholder={'{\n  "Medium": { "tastingNotes": ["Caramel"], "recommendedBrew": "Pour Over", "image": "/images/medium.jpg" }\n}'} className="w-full rounded-md border border-input bg-background px-3 py-2 font-mono text-xs" />
+        </div>
+      </fieldset>
 
       <Button type="submit" disabled={loading}>
         {loading ? "Saving..." : product ? "Update Product" : "Add Product"}

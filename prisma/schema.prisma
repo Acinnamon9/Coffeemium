@@ -168,6 +168,14 @@ model ProductDetail {
   id              String  @id @default(uuid())
   productId       String  @unique // Ensure one-to-one
   fullDescription String  @db.Text // Use @db.Text for potentially long descriptions
+  origin          String?
+  tastingNotes    String[] @default([])
+  body            Int?
+  acidity         Int?
+  sweetness       Int?
+  bitterness      Int?
+  galleryImages   String[] @default([])
+  roastProfiles   Json?
 
   product Product @relation(fields:[productId], references:[id], onDelete:Cascade)
 }

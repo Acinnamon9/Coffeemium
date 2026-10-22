@@ -1,6 +1,7 @@
 import Header from "@/components/landing/header";
 import Footer from "@/components/landing/footer";
 import ProductsClient from "@/components/shop/ProductsClient";
+import CoffeeFinder from "@/components/shop/CoffeeFinder";
 
 export default function ShopPage() {
   return (
@@ -14,6 +15,7 @@ export default function ShopPage() {
         </div>
 
         <div>
+          <div className="mb-8"><CoffeeFinder /></div>
           <section>
             {/* ProductsClient now fetches data via API */}
             <ProductsClient />

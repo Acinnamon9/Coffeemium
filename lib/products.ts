@@ -14,6 +14,17 @@ export const getStorefrontProducts = unstable_cache(
         image: true,
         basePrice: true,
         category: true,
+        detail: {
+          select: {
+            origin: true,
+            tastingNotes: true,
+            body: true,
+            acidity: true,
+            sweetness: true,
+            bitterness: true,
+            fullDescription: true,
+          },
+        },
         productRoasts: {
           select: {
             roast: {
