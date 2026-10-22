@@ -107,7 +107,7 @@ export default function CartClient() {
 
                 <AnimatePresence>
                   {cartItems.map((item) => {
-                    const uniqueKey = `${item.id}-${item.roastId ?? "no-roast"}-${item.grindOptionId ?? "no-grind"}`;
+                    const uniqueKey = `${item.id}-${item.roastId ?? "no-roast"}-${item.grindOptionId ?? "no-grind"}-${item.packageGrams ?? "base"}`;
 
                     return (
                       <motion.div

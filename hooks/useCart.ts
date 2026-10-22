@@ -2,6 +2,7 @@
 import { createContext, createElement, useContext, useState, useEffect, useCallback, useRef } from "react";
 import { useUser } from "@clerk/nextjs";
 import { CartItem, Roast, GrindOption } from "@/lib/types/cart";
+import { getBasePackageGrams } from "@/lib/package-size";
 import {
   clearCartFromLocalStorage,
   getCartFromLocalStorage,
@@ -12,6 +13,7 @@ type CartApiItem = {
   id: string;
   productId: string;
   quantity: number;
+  packageGrams?: number;
   discountPercent?: number;
   product?: {
     basePrice?: number | null;
@@ -64,6 +66,7 @@ function useCartState() {
           id: i.id,
           productId: i.productId,
           quantity: i.quantity,
+          packageGrams: i.packageGrams,
           basePrice: i.product?.basePrice ?? 0,
           name: i.product?.name ?? "Unknown",
           image: i.product?.image ?? null,
@@ -108,6 +111,7 @@ function useCartState() {
           items: guestItems.map((item) => ({
             productId: String(item.productId),
             quantity: item.quantity,
+            packageGrams: item.packageGrams,
             roastId: item.roastId ?? null,
             grindOptionId: item.grindOptionId ?? null,
           })),
@@ -223,7 +227,8 @@ function useCartState() {
     const grind = grindOptions.find((g) => g.id === item.grindOptionId);
     const roastMult = roast?.defaultMultiplier ?? 1;
     const grindCost = grind?.extraCost ?? 0;
-    const baseProductPrice = item.basePrice * roastMult;
+    const packageMultiplier = (item.packageGrams ?? getBasePackageGrams(item.name)) / getBasePackageGrams(item.name);
+    const baseProductPrice = item.basePrice * packageMultiplier * roastMult;
     const unitPrice = item.bundleId && item.priceAtAddition != null
       ? item.priceAtAddition
       : baseProductPrice * (1 - (item.discountPercent ?? 0) / 100) + grindCost;
@@ -257,12 +262,13 @@ function useCartState() {
   const addToCart = async (
     product: { id: string; name: string; basePrice: number; image?: string },
     quantity = 1,
-    options?: { roastId?: string | null; grindOptionId?: string | null }
+    options?: { roastId?: string | null; grindOptionId?: string | null; packageGrams?: number }
   ) => {
     const defaultRoast = roasts[0]?.id ?? null;
     const defaultGrind = grindOptions[0]?.id ?? null;
-    const roastId = options?.roastId ?? defaultRoast;
-    const grindOptionId = options?.grindOptionId ?? defaultGrind;
+    const roastId = options && "roastId" in options ? options.roastId ?? null : defaultRoast;
+    const grindOptionId = options && "grindOptionId" in options ? options.grindOptionId ?? null : defaultGrind;
+    const packageGrams = options?.packageGrams ?? getBasePackageGrams(product.name);
 
     if (!isSignedIn) {
       try {
@@ -272,6 +278,7 @@ function useCartState() {
             String(item.productId) === product.id &&
             (item.roastId ?? null) === roastId &&
             (item.grindOptionId ?? null) === grindOptionId &&
+            (item.packageGrams ?? getBasePackageGrams(item.name)) === packageGrams &&
             !item.bundleId
         );
 
@@ -288,6 +295,7 @@ function useCartState() {
             image: product.image ?? null,
             basePrice: product.basePrice,
             quantity,
+            packageGrams,
             roastId: roastId ?? undefined,
             grindOptionId: grindOptionId ?? undefined,
           });
@@ -306,6 +314,7 @@ function useCartState() {
       quantity,
       roastId,
       grindOptionId,
+      packageGrams,
     };
 
     try {
@@ -331,6 +340,64 @@ function useCartState() {
     }
   };
 
+  const addBundleToCart = async (
+    products: { id: string; name: string; basePrice: number; image?: string }[]
+  ) => {
+    if (products.length !== 2 || products[0].id === products[1].id) {
+      return { success: false, error: "Choose two different coffees." };
+    }
+
+    if (isSignedIn) {
+      try {
+        const response = await fetch("/api/bundles/pairing", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ productIds: products.map((product) => product.id) }),
+        });
+        if (!response.ok) {
+          const result = await response.json().catch(() => null) as { error?: string } | null;
+          return { success: false, error: result?.error ?? "Could not add this pairing." };
+        }
+        await fetchCart();
+        return { success: true };
+      } catch {
+        return { success: false, error: "Could not add this pairing." };
+      }
+    }
+
+    try {
+      const guestItems = getCartFromLocalStorage();
+      const bundleId = `demo-pairing-${products.map((product) => product.id).sort().join("-")}`;
+      for (const product of products) {
+        const packageGrams = getBasePackageGrams(product.name);
+        const existingIndex = guestItems.findIndex((item) =>
+          String(item.productId) === product.id && item.bundleId === bundleId
+        );
+        if (existingIndex >= 0) {
+          guestItems[existingIndex] = { ...guestItems[existingIndex], quantity: guestItems[existingIndex].quantity + 1 };
+        } else {
+          guestItems.push({
+            id: `guest-${typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`}`,
+            productId: product.id,
+            name: product.name,
+            image: product.image ?? null,
+            basePrice: product.basePrice,
+            quantity: 1,
+            packageGrams,
+            priceAtAddition: Number((product.basePrice * 0.9).toFixed(2)),
+            bundleId,
+            bundleName: "Coffeemium Pairing (Demo)",
+          });
+        }
+      }
+      saveCartToLocalStorage(guestItems);
+      setCartItems(guestItems);
+      return { success: true };
+    } catch {
+      return { success: false, error: "Unable to save this pairing in your browser." };
+    }
+  };
+
   return {
     cartItems,
     roasts,
@@ -346,6 +413,7 @@ function useCartState() {
     lastRemovedItem,
     undoRemoveItem,
     addToCart,
+    addBundleToCart,
   };
 }
 

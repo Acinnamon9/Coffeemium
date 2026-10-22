@@ -296,6 +296,7 @@ async function main() {
     { name: "French Press", extraCost: 30 },
     { name: "Pour Over", extraCost: 40 },
     { name: "Espresso", extraCost: 50 },
+    { name: "Moka Pot", extraCost: 40 },
   ];
 
   for (const grindOption of grindOptions) {

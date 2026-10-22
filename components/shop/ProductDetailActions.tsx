@@ -8,8 +8,12 @@ import { fireConfetti } from "@/lib/confetti";
 
 export default function ProductDetailActions({
   product,
+  quantity,
+  options,
 }: {
   product: { id: string; name: string; basePrice: number; image: string };
+  quantity: number;
+  options: { roastId?: string | null; grindOptionId?: string | null; packageGrams: number };
 }) {
   const { addToCart, loading } = useCart();
   const [adding, setAdding] = useState(false);
@@ -18,7 +22,7 @@ export default function ProductDetailActions({
     if (adding || loading) return;
     const button = event.currentTarget;
     setAdding(true);
-    const result = await addToCart(product);
+    const result = await addToCart(product, quantity, options);
     setAdding(false);
     if (result.success) {
       fireConfetti(button);
@@ -27,5 +31,5 @@ export default function ProductDetailActions({
     else toast.error(result.error ?? "Please sign in before adding items.");
   }
 
-  return <Button onClick={handleAdd} disabled={adding || loading} className="mt-8 w-full rounded-full bg-[#3b281e] py-6 text-lg hover:bg-[#563b2b] sm:w-fit sm:px-10">{adding ? "Adding…" : "Add to Cart"}</Button>;
+  return <Button onClick={handleAdd} disabled={adding || loading} className="w-full rounded-full bg-[#3b281e] py-6 text-lg hover:bg-[#563b2b]">{adding ? "Adding…" : `Add ${quantity} to Cart`}</Button>;
 }

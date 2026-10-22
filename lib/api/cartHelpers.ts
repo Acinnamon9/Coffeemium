@@ -1,6 +1,7 @@
 // /lib/api/cartHelpers.ts
 import { Prisma } from "@/prisma/generated/client/client";
 import { z } from "zod";
+import { getBasePackageGrams, isAvailablePackageSize } from "@/lib/package-size";
 
 export type CartItemWithPriceRelations = Prisma.CartItemGetPayload<{
   include: {
@@ -20,13 +21,19 @@ export function calculateItemPrice(item: CartItemWithPriceRelations): number {
   const base = item.product?.basePrice ?? 0;
   const roastMultiplier = item.roast?.defaultMultiplier ?? 1;
   const grindExtra = item.grindOption?.extraCost ?? 0;
-  return parseFloat((base * roastMultiplier + grindExtra).toFixed(2));
+  const packageMultiplier = item.packageGrams / getBasePackageGrams(item.product.name);
+  return parseFloat((base * packageMultiplier * roastMultiplier + grindExtra).toFixed(2));
+}
+
+export function validatePackageSize(productName: string, packageGrams: number) {
+  return isAvailablePackageSize(productName, packageGrams);
 }
 
 export const addItemSchema = z.object({
   productId: z.string().uuid(),
   roastId: z.string().uuid().optional().nullable(),
   grindOptionId: z.string().uuid().optional().nullable(),
+  packageGrams: z.number().int().positive().optional(),
   quantity: z.number().int().positive().default(1),
 });
 

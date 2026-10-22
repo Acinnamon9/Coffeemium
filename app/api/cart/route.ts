@@ -5,8 +5,10 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   addItemSchema,
   CartItemWithPriceRelations,
+  validatePackageSize,
 } from "@/lib/api/cartHelpers";
 import { calculateDealPrice, getActiveFeaturedDeal, getDealPercent } from "@/lib/deals";
+import { getBasePackageGrams } from "@/lib/package-size";
 
 function errorJson(message: string, status = 500) {
   return NextResponse.json({ error: message }, { status });
@@ -45,6 +47,14 @@ export async function POST(req: NextRequest) {
         });
       }
 
+      const product = await tx.product.findUnique({
+        where: { id: productId },
+        select: { basePrice: true, name: true },
+      });
+      if (!product) throw new Error("Product not found");
+      const packageGrams = parsed.data.packageGrams ?? getBasePackageGrams(product.name);
+      if (!validatePackageSize(product.name, packageGrams)) throw new Error("Invalid package size");
+
       // Find if identical item exists (same product + same options)
       const existing = await tx.cartItem.findFirst({
         where: {
@@ -52,6 +62,8 @@ export async function POST(req: NextRequest) {
           productId,
           roastId: roastId ?? null,
           grindOptionId: grindOptionId ?? null,
+          packageGrams,
+          bundleId: null,
         },
       });
 
@@ -62,18 +74,12 @@ export async function POST(req: NextRequest) {
           data: { quantity: { increment: quantity } },
         });
       } else {
-        // ensure product exists and capture priceAtAddition
-        const product = await tx.product.findUnique({
-          where: { id: productId },
-          select: { basePrice: true },
-        });
-        if (!product) throw new Error("Product not found");
-
         await tx.cartItem.create({
           data: {
             cartId: cart.id,
             productId,
             quantity,
+            packageGrams,
             priceAtAddition: product.basePrice,
             ...(roastId ? { roastId } : {}),
             ...(grindOptionId ? { grindOptionId } : {}),
@@ -105,6 +111,9 @@ export async function POST(req: NextRequest) {
     console.error("POST /api/cart error:", err);
     if (err instanceof Error && err.message === "Product not found") {
       return errorJson(err.message, 404);
+    }
+    if (err instanceof Error && err.message === "Invalid package size") {
+      return errorJson(err.message, 400);
     }
     return errorJson(err instanceof Error ? err.message : "Unexpected error", 500);
   }

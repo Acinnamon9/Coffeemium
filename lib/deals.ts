@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import type { CartItemWithPriceRelations } from "@/lib/api/cartHelpers";
+import { getBasePackageGrams } from "@/lib/package-size";
 
 export async function getActiveFeaturedDeal(now = new Date()) {
   return prisma.featuredDeal.findFirst({
@@ -24,6 +25,7 @@ export function calculateDealPrice(item: CartItemWithPriceRelations, discountPer
   const basePrice = item.product?.basePrice ?? 0;
   const roastMultiplier = item.roast?.defaultMultiplier ?? 1;
   const grindExtra = item.grindOption?.extraCost ?? 0;
-  const productPrice = basePrice * roastMultiplier;
+  const packageMultiplier = item.packageGrams / getBasePackageGrams(item.product.name);
+  const productPrice = basePrice * packageMultiplier * roastMultiplier;
   return Number((productPrice * (1 - discountPercent / 100) + grindExtra).toFixed(2));
 }

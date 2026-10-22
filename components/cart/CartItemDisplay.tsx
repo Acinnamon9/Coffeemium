@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 
 import { CartItem, Roast, GrindOption } from "@/lib/types/cart";
 import { Coffee } from "lucide-react";
+import { formatPackageGrams, getBasePackageGrams } from "@/lib/package-size";
 import {
   Select,
   SelectTrigger,
@@ -42,12 +43,14 @@ export const CartItemDisplay = ({
 
   const roastMultiplier = selectedRoast?.defaultMultiplier ?? 1.0;
   const grindExtraCost = selectedGrind?.extraCost ?? 0;
+  const packageGrams = item.packageGrams ?? getBasePackageGrams(item.name);
+  const packageMultiplier = packageGrams / getBasePackageGrams(item.name);
   const originalPrice = item.bundleId && item.priceAtAddition != null
     ? item.priceAtAddition
-    : item.basePrice * roastMultiplier + grindExtraCost;
+    : item.basePrice * packageMultiplier * roastMultiplier + grindExtraCost;
   const adjustedPrice = item.bundleId
     ? originalPrice
-    : item.basePrice * roastMultiplier * (1 - (item.discountPercent ?? 0) / 100) + grindExtraCost;
+    : item.basePrice * packageMultiplier * roastMultiplier * (1 - (item.discountPercent ?? 0) / 100) + grindExtraCost;
   const totalPrice = adjustedPrice * item.quantity;
   const price = `₹${totalPrice.toFixed(2)}`;
 
@@ -91,12 +94,15 @@ export const CartItemDisplay = ({
             )}
           </h3>
           <p className="text-sm text-gray-500">
-            ₹{item.basePrice.toFixed(2)} base price
+            {item.bundleId && item.priceAtAddition != null
+              ? `₹${item.priceAtAddition.toFixed(2)} pairing price per pack`
+              : `₹${item.basePrice.toFixed(2)} base price`}
           </p>
           {item.bundleName && <span className="mt-1 w-fit rounded-full bg-[#f2e8dc] px-2 py-1 text-xs font-semibold text-[#8b5e3c]">Part of {item.bundleName}</span>}
+          <span className="mt-1 text-xs text-gray-500">Pack: {formatPackageGrams(packageGrams)}</span>
 
           {/* Roast Dropdown */}
-          <Select
+          {!item.bundleId && <Select
             value={currentRoastId}
             onValueChange={(value) =>
               onUpdateItemOptions(item.id, { roastId: value })
@@ -112,10 +118,10 @@ export const CartItemDisplay = ({
                 </SelectItem>
               ))}
             </SelectContent>
-          </Select>
+          </Select>}
 
           {/* Grind Dropdown */}
-          <Select
+          {!item.bundleId && <Select
             value={currentGrindId}
             onValueChange={(value) =>
               onUpdateItemOptions(item.id, { grindOptionId: value })
@@ -131,10 +137,10 @@ export const CartItemDisplay = ({
                 </SelectItem>
               ))}
             </SelectContent>
-          </Select>
+          </Select>}
 
           {/* Pricing Breakdown */}
-          <div className="text-sm text-gray-600 mt-3 bg-gray-50 p-3 rounded-md border border-gray-200">
+          {!item.bundleId && <div className="text-sm text-gray-600 mt-3 bg-gray-50 p-3 rounded-md border border-gray-200">
             <p className="flex justify-between">
               <span>Base price:</span>
               <span className="font-medium">₹{item.basePrice.toFixed(2)}</span>
@@ -161,7 +167,7 @@ export const CartItemDisplay = ({
                 </motion.span>
               </p>
             </div>
-          </div>
+          </div>}
         </div>
       </div>
 

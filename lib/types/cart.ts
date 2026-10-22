@@ -8,6 +8,7 @@ export interface CartItem {
   image?: string | null;
   basePrice: number;
   quantity: number;
+  packageGrams?: number;
   roastId?: string; // Optional, for database cart
   grindOptionId?: string; // Optional, for database cart
   priceAtAddition?: number; // Optional, for database cart

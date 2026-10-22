@@ -10,10 +10,17 @@ export default async function ProductDetailPage({
   params: Promise<{ productId: string }>;
 }) {
   const { productId } = await params;
-  const product = await prisma.product.findUnique({
-    where: { id: productId },
-    include: { detail: true, productRoasts: { include: { roast: true } } },
-  });
+  const [product, grindOptions, relatedProducts] = await Promise.all([
+    prisma.product.findUnique({
+      where: { id: productId },
+      include: { detail: true, productRoasts: { include: { roast: true } } },
+    }),
+    prisma.grindOption.findMany({ orderBy: { extraCost: "asc" } }),
+    prisma.product.findMany({
+      where: { id: { not: productId } },
+      select: { id: true, name: true, description: true, image: true, basePrice: true, category: true },
+    }),
+  ]);
 
   if (!product) notFound();
 
@@ -21,7 +28,7 @@ export default async function ProductDetailPage({
     <div className="min-h-screen bg-[#fbf8f3]">
       <Header />
       <main className="container mx-auto px-4 py-12 sm:py-20">
-        <ProductDetailView product={product} />
+        <ProductDetailView product={product} grindOptions={grindOptions} relatedProducts={relatedProducts} />
       </main>
       <Footer />
     </div>

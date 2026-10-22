@@ -64,12 +64,14 @@ export async function POST(req: Request) {
             create: cart.items.map((item) => ({
               productId: item.productId,
               quantity: item.quantity,
+              packageGrams: item.packageGrams,
               basePrice: itemPrice(item),
               roastId: item.roastId,
               grindOptionId: item.grindOptionId,
             })),
           },
         },
+        include: { items: true },
       });
 
       await tx.cartItem.deleteMany({ where: { cartId: cart.id } });
@@ -81,6 +83,7 @@ export async function POST(req: Request) {
         success: true,
         redirectUrl: `/fake-payment?orderId=${order.id}`,
         orderId: order.id,
+        items: order.items,
       });
     }
 
@@ -88,6 +91,7 @@ export async function POST(req: Request) {
       success: true,
       redirectUrl: `/order/success?orderId=${order.id}`,
       orderId: order.id,
+      items: order.items,
     });
   } catch (error) {
     console.error("Order creation failed:", error);

@@ -2,6 +2,8 @@ import { auth } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
+import { getBasePackageGrams } from "@/lib/package-size";
+import { validatePackageSize } from "@/lib/api/cartHelpers";
 
 const mergeCartSchema = z.object({
   items: z.array(
@@ -9,6 +11,7 @@ const mergeCartSchema = z.object({
       productId: z.string().uuid(),
       roastId: z.string().uuid().optional().nullable(),
       grindOptionId: z.string().uuid().optional().nullable(),
+      packageGrams: z.number().int().positive().optional(),
       quantity: z.number().int().positive(),
     })
   ),
@@ -35,9 +38,11 @@ export async function POST(req: NextRequest) {
       for (const item of parsed.data.items) {
         const product = await tx.product.findUnique({
           where: { id: item.productId },
-          select: { basePrice: true },
+          select: { basePrice: true, name: true },
         });
         if (!product) throw new Error(`Product not found: ${item.productId}`);
+        const packageGrams = item.packageGrams ?? getBasePackageGrams(product.name);
+        if (!validatePackageSize(product.name, packageGrams)) throw new Error("Invalid package size");
 
         const existing = await tx.cartItem.findFirst({
           where: {
@@ -45,6 +50,7 @@ export async function POST(req: NextRequest) {
             productId: item.productId,
             roastId: item.roastId ?? null,
             grindOptionId: item.grindOptionId ?? null,
+            packageGrams,
             bundleId: null,
           },
         });
@@ -62,6 +68,7 @@ export async function POST(req: NextRequest) {
               roastId: item.roastId ?? null,
               grindOptionId: item.grindOptionId ?? null,
               quantity: item.quantity,
+              packageGrams,
               priceAtAddition: product.basePrice,
             },
           });
@@ -74,6 +81,9 @@ export async function POST(req: NextRequest) {
     console.error("POST /api/cart/merge error:", error);
     if (error instanceof Error && error.message.startsWith("Product not found:")) {
       return NextResponse.json({ error: error.message }, { status: 404 });
+    }
+    if (error instanceof Error && error.message === "Invalid package size") {
+      return NextResponse.json({ error: error.message }, { status: 400 });
     }
     return NextResponse.json({ error: "Failed to merge cart" }, { status: 500 });
   }

@@ -187,6 +187,7 @@ model CartItem {
   roastId       String?
   grindOptionId String?
   quantity      Int
+  packageGrams  Int         @default(250)
   priceAtAddition Float // Storing the price at the time of addition
   bundleId      String?
 
@@ -196,7 +197,7 @@ model CartItem {
   grindOption GrindOption? @relation(fields: [grindOptionId], references: [id], onDelete: Cascade)
   bundle      Bundle?      @relation(fields: [bundleId], references: [id], onDelete: SetNull)
 
-  @@unique([cartId, productId, roastId, grindOptionId, bundleId])
+  @@unique([cartId, productId, roastId, grindOptionId, bundleId, packageGrams], map: "CartItem_product_package_key")
 }
 
 model Order {
@@ -217,6 +218,7 @@ model OrderItem {
   orderId       String
   productId     String
   quantity      Int
+  packageGrams  Int     @default(250)
   basePrice     Float
   roastId       String?
   grindOptionId String?
@@ -226,6 +228,6 @@ model OrderItem {
   roast       Roast?      @relation(fields: [roastId], references: [id], onDelete: Cascade)
   grindOption GrindOption? @relation(fields: [grindOptionId], references: [id], onDelete: Cascade)
 
-  @@unique([orderId, productId, roastId, grindOptionId])
+  @@unique([orderId, productId, roastId, grindOptionId, packageGrams], map: "OrderItem_product_package_key")
 }
 

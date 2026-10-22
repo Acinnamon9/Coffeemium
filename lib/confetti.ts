@@ -2,6 +2,7 @@ const colors = ["#5c3825", "#75482d", "#8b5e3c", "#a8754f", "#c08a5d", "#d4a373"
 
 /** A short shower of coffee toned confetti falling across the screen. */
 export function fireConfetti(_origin?: HTMLElement | null) {
+  void _origin;
   if (typeof window === "undefined" || typeof document === "undefined") return;
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
